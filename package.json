@@ -1,0 +1,32 @@
+{
+  "name": "simple-canvas-library",
+  "version": "1.0.0",
+  "description": "A simple library for handling basic canvas drawings, callbacks, and animations.",
+  "type": "module",
+  "main": "dist/simple-canvas-library.umd.cjs",
+  "module": "dist/simple-canvas-library.es.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "npm run build:demos && vite",
+    "build": "vite build",
+    "build:demos": "node build-demos.js",
+    "docs": "typedoc --out docs src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/simple-canvas-library.git"
+  },
+  "keywords": [
+    "canvas",
+    "drawing",
+    "animation",
+    "game"
+  ],
+  "author": "Thomas Hinkle",
+  "license": "MIT",
+  "devDependencies": {
+    "typedoc": "^0.28.10",
+    "typescript": "^5.5.4",
+    "vite": "^6.0.0"
+  }
+}
