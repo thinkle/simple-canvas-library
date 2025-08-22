@@ -28,8 +28,19 @@ function parseDemoMetadata(content) {
   return metadata;
 }
 
+// Transform demo script to use built library instead of TypeScript source
+function transformDemoScript(script) {
+  // Replace TypeScript imports with built library imports
+  return script.replace(
+    /import\s+{([^}]+)}\s+from\s+["']\.\.\/src\/index\.ts["']/g,
+    'import { $1 } from "../dist/simple-canvas-library.es.js"'
+  );
+}
+
 // Generate HTML template for a demo
 function generateDemoHTML(demoScript, metadata, fileName) {
+  const transformedScript = transformDemoScript(demoScript);
+  
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -158,13 +169,13 @@ function generateDemoHTML(demoScript, metadata, fileName) {
       <div class="code-section">
         <div class="code-header">Source Code</div>
         <div class="code-content">
-          <pre><code>${escapeHtml(demoScript)}</code></pre>
+          <pre><code>${escapeHtml(transformedScript)}</code></pre>
         </div>
       </div>
     </div>
 
     <script type="module">
-      ${demoScript}
+      ${transformedScript}
     </script>
   </body>
 </html>`;

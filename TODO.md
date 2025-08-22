@@ -62,7 +62,7 @@
   - [x] ✨ NEW: Demo source code is displayed alongside the running demo to ensure accuracy
   - [x] ✨ NEW: Demos are generated from `demo-scripts/` directory with metadata in JSDoc comments
 - [x] Port and expand `testLibrary` as a demo in `demos/`
-- [ ] Set up GitHub Pages for live demos and docs
+- [x] Set up GitHub Pages for live demos and docs
 - [x] Configure build to output a single distributable JS file (for CodePen, etc.)
 - [x] Document how to use the library in CodePen/JSFiddle
 
