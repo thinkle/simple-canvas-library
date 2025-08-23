@@ -37,6 +37,10 @@ topBar.addButton({
 // Start button
 const startButton = topBar.addButton({
   text: "Start Game",
+  style: {
+    textColor: 'white',
+    color: '#993a3a',
+  },
   onclick: () => {
     if (gi.getGameState() === 'stopped') {
       // Reset ball position when starting

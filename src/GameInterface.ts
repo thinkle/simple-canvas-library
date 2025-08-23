@@ -1,6 +1,6 @@
-import { GameCanvas } from './GameCanvas';
-import { TopBar, BottomBar } from './UIBar';
-import { Size } from './types';
+import { GameCanvas } from "./GameCanvas";
+import { TopBar, BottomBar } from "./UIBar";
+import { Size } from "./types";
 
 /**
  * Configuration for GameInterface
@@ -14,12 +14,14 @@ export interface GameInterfaceConfig {
   parent?: HTMLElement;
   /** CSS class for the main container */
   containerClass?: string;
+  /** CSS variable overrides for this interface (e.g. { '--bar-background': '#222' }) */
+  cssVars?: Record<string, string>;
 }
 
 /**
  * GameInterface extends GameCanvas functionality with UI components.
  * Creates a complete game interface with top bar, canvas, and bottom bar.
- * 
+ *
  * @example
  * ```typescript
  * const gi = new GameInterface();
@@ -36,23 +38,23 @@ export interface GameInterfaceConfig {
  * ```
  */
 export class GameInterface extends GameCanvas {
-  private container: HTMLElement;
-  private canvasContainer: HTMLElement;
+  private container!: HTMLElement;
+  private canvasContainer!: HTMLElement;
   private topBar?: TopBar;
   private bottomBar?: BottomBar;
   private config: GameInterfaceConfig;
-  private gameState: 'stopped' | 'running' | 'paused' = 'stopped';
+  private gameState: "stopped" | "running" | "paused" = "stopped";
 
   constructor(config: GameInterfaceConfig = {}) {
     // Create the canvas element first
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = config.canvasSize?.width || 400;
     canvas.height = config.canvasSize?.height || 300;
 
     // Call parent constructor with the canvas element
     super(canvas, {
       size: config.canvasSize,
-      autoresize: config.autoresize
+      autoresize: config.autoresize,
     });
 
     this.config = config;
@@ -61,31 +63,69 @@ export class GameInterface extends GameCanvas {
 
   private setupContainer(canvas: HTMLCanvasElement) {
     // Create main container
-    this.container = document.createElement('div');
-    
+    this.container = document.createElement("div");
+
     if (this.config.containerClass) {
       this.container.className = this.config.containerClass;
     } else {
       this.container.style.cssText = `
         display: flex;
         flex-direction: column;
-        border: 1px solid #ccc;
+        border: 1px solid var(--container-border-color, #222);
         border-radius: 4px;
         overflow: hidden;
-        background: white;
+        background: var(--container-background, #18181b);
         max-width: 100%;
         margin: 0 auto;
+        /* Dark mode CSS variable defaults */
+        --container-background: #18181b;
+        --container-border-color: #222;
+        --canvas-container-background: #232326;
+        --canvas-background: #18181b;
+        --bar-background: #232326;
+        --bar-border-color: #333;
+        --button-background: #232326;
+        --button-hover-background: #333;
+        --button-border-color: #333;
+        --button-text-color: #e6e6e6;
+        --input-background: #232326;
+        --input-border-color: #333;
+        --input-text-color: #e6e6e6;
+        --input-container-background: transparent;
+        --label-color: #e6e6e6;
+        --dialog-background: #232326;
+        --dialog-title-color: #e6e6e6;
+        --dialog-message-color: #b3b3b3;
+        --close-button-background: #22c55e;
+        --close-button-color: #18181b;
+        /* Slider specific */
+        --scl-font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        --scl-font-size: 14px;
+        --scl-color-text: #e6e6e6;
+        --scl-color-muted: #9ca3af;
+        --scl-color-accent: #22c55e;
+        --scl-input-bg: transparent;
+        --scl-input-track-bg: #444;
+        --scl-input-thumb-bg: #22c55e;
+        --scl-input-thumb-border: #18181b;
       `;
     }
 
+    // Inject CSS variables as inline styles on the container (overrides)
+    if (this.config.cssVars) {
+      for (const [k, v] of Object.entries(this.config.cssVars)) {
+        this.container.style.setProperty(k, v);
+      }
+    }
+
     // Create canvas container with responsive sizing
-    this.canvasContainer = document.createElement('div');
+    this.canvasContainer = document.createElement("div");
     this.canvasContainer.style.cssText = `
       flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #fafafa;
+      background: var(--canvas-container-background, #fafafa);
       min-height: 200px;
       padding: 10px;
       box-sizing: border-box;
@@ -97,6 +137,7 @@ export class GameInterface extends GameCanvas {
       max-height: 100%;
       border: 1px solid #ddd;
       border-radius: 4px;
+      background: var(--canvas-background, transparent);
     `;
 
     // Add canvas to container
@@ -116,7 +157,10 @@ export class GameInterface extends GameCanvas {
     if (!this.topBar) {
       this.topBar = new TopBar();
       // Insert at the beginning of container
-      this.container.insertBefore(this.topBar.getElement(), this.container.firstChild);
+      this.container.insertBefore(
+        this.topBar.getElement(),
+        this.container.firstChild
+      );
     }
     return this.topBar;
   }
@@ -178,8 +222,12 @@ export class GameInterface extends GameCanvas {
   /**
    * Show a simple dialog with a message
    */
-  dialog(title: string, message?: string, onClose?: () => void): HTMLDialogElement {
-    const dialog = document.createElement('dialog');
+  dialog(
+    title: string,
+    message?: string,
+    onClose?: () => void
+  ): HTMLDialogElement {
+    const dialog = document.createElement("dialog");
     dialog.style.cssText = `
       border: none;
       border-radius: 8px;
@@ -187,46 +235,47 @@ export class GameInterface extends GameCanvas {
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       max-width: 400px;
       width: 90%;
+      background: var(--dialog-background, #fff);
     `;
 
-    const content = document.createElement('div');
+    const content = document.createElement("div");
     content.style.cssText = `
       padding: 20px;
       text-align: center;
     `;
 
-    const titleEl = document.createElement('h3');
+    const titleEl = document.createElement("h3");
     titleEl.textContent = title;
     titleEl.style.cssText = `
       margin: 0 0 10px 0;
-      color: #333;
+      color: var(--dialog-title-color, #333);
     `;
     content.appendChild(titleEl);
 
     if (message) {
-      const messageEl = document.createElement('p');
+      const messageEl = document.createElement("p");
       messageEl.textContent = message;
       messageEl.style.cssText = `
         margin: 0 0 20px 0;
-        color: #666;
+        color: var(--dialog-message-color, #666);
         line-height: 1.4;
       `;
       content.appendChild(messageEl);
     }
 
-    const closeButton = document.createElement('button');
-    closeButton.textContent = 'OK';
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "OK";
     closeButton.style.cssText = `
       padding: 8px 20px;
-      background: #007cba;
-      color: white;
+      background: var(--close-button-background, #007cba);
+      color: var(--close-button-color, #fff);
       border: none;
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
     `;
 
-    closeButton.addEventListener('click', () => {
+    closeButton.addEventListener("click", () => {
       dialog.close();
       if (onClose) onClose();
     });
@@ -235,7 +284,7 @@ export class GameInterface extends GameCanvas {
     dialog.appendChild(content);
 
     // Close on backdrop click
-    dialog.addEventListener('click', (e) => {
+    dialog.addEventListener("click", (e) => {
       if (e.target === dialog) {
         dialog.close();
         if (onClose) onClose();
@@ -246,7 +295,7 @@ export class GameInterface extends GameCanvas {
     dialog.showModal();
 
     // Remove from DOM when closed
-    dialog.addEventListener('close', () => {
+    dialog.addEventListener("close", () => {
       document.body.removeChild(dialog);
     });
 
@@ -263,7 +312,7 @@ export class GameInterface extends GameCanvas {
   /**
    * Get the current game state
    */
-  getGameState(): 'stopped' | 'running' | 'paused' {
+  getGameState(): "stopped" | "running" | "paused" {
     return this.gameState;
   }
 
@@ -272,7 +321,7 @@ export class GameInterface extends GameCanvas {
    */
   run(): void {
     super.run();
-    this.gameState = 'running';
+    this.gameState = "running";
   }
 
   /**
@@ -280,7 +329,7 @@ export class GameInterface extends GameCanvas {
    */
   pause(): void {
     super.stop();
-    this.gameState = 'paused';
+    this.gameState = "paused";
   }
 
   /**
@@ -288,7 +337,7 @@ export class GameInterface extends GameCanvas {
    */
   resume(): void {
     super.run();
-    this.gameState = 'running';
+    this.gameState = "running";
   }
 
   /**
@@ -296,7 +345,7 @@ export class GameInterface extends GameCanvas {
    */
   stop(): void {
     super.stop();
-    this.gameState = 'stopped';
+    this.gameState = "stopped";
   }
 
   /**

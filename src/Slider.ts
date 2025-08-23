@@ -1,4 +1,4 @@
-import { UIComponent } from './UIComponent';
+import { UIComponent } from "./UIComponent";
 
 /**
  * Configuration options for Slider component
@@ -18,11 +18,30 @@ export interface SliderConfig {
   oninput?: (value: number) => void;
   /** Whether the slider is disabled */
   disabled?: boolean;
+  /**
+   * Simple theme overrides mapped to CSS variables.
+   * e.g. { fontFamily: 'Inter, sans-serif', accentColor: '#4f46e5' }
+   */
+  theme?: {
+    fontFamily?: string;
+    color?: string; // main text color
+    mutedColor?: string; // muted label/value color
+    accentColor?: string; // thumb/background accent
+    inputBackground?: string; // input background (for host)
+    trackBackground?: string; // track color
+    thumbBackground?: string; // thumb color
+    thumbBorder?: string; // thumb border color
+  };
+  /**
+   * Advanced: direct CSS variable injection. Keys should be CSS vars.
+   * e.g. { '--scl-input-track-bg': '#333' }
+   */
+  cssVars?: Record<string, string>;
 }
 
 /**
  * Slider component for range input controls
- * 
+ *
  * @example
  * ```typescript
  * const slider = new Slider({
@@ -40,28 +59,44 @@ export class Slider extends UIComponent {
   private config: SliderConfig;
 
   constructor(config: SliderConfig = {}) {
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     container.style.cssText = `
       display: flex;
       align-items: center;
       margin: 5px 10px;
       gap: 8px;
+      /* host CSS variables (overridable) */
+      font-family: var(--scl-font-family, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial);
+      color: var(--scl-color-text, #e6e6e6);
+      background: var(--scl-input-bg, transparent);
     `;
 
     super(container);
     this.config = config;
+
+    // No custom slider CSS injection; use browser default styling for compatibility
+
+    // Apply simple theme overrides as CSS variables on the host element
+    applyThemeVars(this.element, this.config.theme);
+    // Apply advanced direct CSS variable overrides if provided
+    if (this.config.cssVars) {
+      for (const [k, v] of Object.entries(this.config.cssVars)) {
+        this.element.style.setProperty(k, v);
+      }
+    }
+
     this.createSlider();
   }
 
   private createSlider() {
     // Label
     if (this.config.label) {
-      const label = document.createElement('label');
-      label.textContent = this.config.label + ':';
+      const label = document.createElement("label");
+      label.textContent = this.config.label + ":";
       label.style.cssText = `
-        font-size: 14px;
+        font-size: var(--scl-font-size, 14px);
         font-weight: 500;
-        color: #333;
+        color: var(--scl-color-text, #e6e6e6);
         margin-right: 8px;
         white-space: nowrap;
       `;
@@ -69,8 +104,8 @@ export class Slider extends UIComponent {
     }
 
     // Range input
-    this.input = document.createElement('input');
-    this.input.type = 'range';
+    this.input = document.createElement("input");
+    this.input.type = "range";
     this.input.min = String(this.config.min ?? 0);
     this.input.max = String(this.config.max ?? 100);
     this.input.value = String(this.config.value ?? 50);
@@ -81,72 +116,25 @@ export class Slider extends UIComponent {
       flex: 1;
       min-width: 100px;
       height: 20px;
-      background: transparent;
-      outline: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
+      background: var(--scl-color, #5a5a5a);      
+      color: var(--scl-color-text, #777777ff);
     `;
 
-    // Custom slider styling
-    const style = document.createElement('style');
-    style.textContent = `
-      input[type="range"]::-webkit-slider-track {
-        width: 100%;
-        height: 6px;
-        background: #ddd;
-        border-radius: 3px;
-      }
-      input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        height: 16px;
-        width: 16px;
-        border-radius: 8px;
-        background: #007cba;
-        cursor: pointer;
-        border: 2px solid white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-      }
-      input[type="range"]::-moz-range-track {
-        width: 100%;
-        height: 6px;
-        background: #ddd;
-        border-radius: 3px;
-        border: none;
-      }
-      input[type="range"]::-moz-range-thumb {
-        height: 16px;
-        width: 16px;
-        border-radius: 8px;
-        background: #007cba;
-        cursor: pointer;
-        border: 2px solid white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-      }
-      input[type="range"]:disabled::-webkit-slider-thumb {
-        background: #ccc;
-        cursor: not-allowed;
-      }
-      input[type="range"]:disabled::-moz-range-thumb {
-        background: #ccc;
-        cursor: not-allowed;
-      }
-    `;
-    document.head.appendChild(style);
+    // Remove per-instance style injection; handled globally via ensureSliderStylesInjected()
 
     // Value display
-    this.valueDisplay = document.createElement('span');
+    this.valueDisplay = document.createElement("span");
     this.valueDisplay.textContent = this.input.value;
     this.valueDisplay.style.cssText = `
-      font-size: 14px;
-      color: #666;
+      font-size: var(--scl-font-size, 14px);
+      color: var(--scl-color-muted, #9ca3af);
       min-width: 30px;
       text-align: right;
-      font-family: monospace;
+      font-family: var(--scl-font-family, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial);
     `;
 
     // Event listener
-    this.input.addEventListener('input', () => {
+    this.input.addEventListener("input", () => {
       const value = parseFloat(this.input.value);
       this.valueDisplay.textContent = String(value);
       if (this.config.oninput) {
@@ -219,5 +207,27 @@ export class Slider extends UIComponent {
   setStep(step: number): this {
     this.input.step = String(step);
     return this;
+  }
+}
+
+// Removed ensureSliderStylesInjected: slider now uses browser default styling for maximum compatibility.
+
+/**
+ * Maps friendly theme keys to CSS variables and applies them to the host element.
+ */
+function applyThemeVars(host: HTMLElement, theme?: SliderConfig["theme"]) {
+  if (!theme) return;
+  const map: Record<string, string | undefined> = {
+    "--scl-font-family": theme.fontFamily,
+    "--scl-color-text": theme.color,
+    "--scl-color-muted": theme.mutedColor,
+    "--scl-color-accent": theme.accentColor,
+    "--scl-input-bg": theme.inputBackground,
+    "--scl-input-track-bg": theme.trackBackground,
+    "--scl-input-thumb-bg": theme.thumbBackground,
+    "--scl-input-thumb-border": theme.thumbBorder,
+  };
+  for (const [k, v] of Object.entries(map)) {
+    if (v != null) host.style.setProperty(k, v);
   }
 }

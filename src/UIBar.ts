@@ -1,7 +1,7 @@
-import { UIComponent } from './UIComponent';
-import { Button, ButtonConfig } from './Button';
-import { NumberInput, NumberInputConfig } from './NumberInput';
-import { Slider, SliderConfig } from './Slider';
+import { UIComponent } from "./UIComponent";
+import { Button, ButtonConfig } from "./Button";
+import { NumberInput, NumberInputConfig } from "./NumberInput";
+import { Slider, SliderConfig } from "./Slider";
 
 /**
  * Base class for UI bars (top/bottom)
@@ -47,7 +47,7 @@ export abstract class UIBar extends UIComponent {
    * Remove all components from the bar
    */
   clear(): this {
-    this.components.forEach(component => {
+    this.components.forEach((component) => {
       const element = component.getElement();
       if (element.parentNode) {
         element.parentNode.removeChild(element);
@@ -70,13 +70,13 @@ export abstract class UIBar extends UIComponent {
  */
 export class TopBar extends UIBar {
   constructor() {
-    const element = document.createElement('div');
+    const element = document.createElement("div");
     element.style.cssText = `
       display: flex;
       align-items: center;
       padding: 8px;
-      background: #f8f8f8;
-      border-bottom: 1px solid #ddd;
+      background: var(--bar-background, #f8f8f8);
+      border-bottom: 1px solid var(--bar-border-color, #ddd);
       min-height: 40px;
       flex-wrap: wrap;
     `;
@@ -89,13 +89,13 @@ export class TopBar extends UIBar {
  */
 export class BottomBar extends UIBar {
   constructor() {
-    const element = document.createElement('div');
+    const element = document.createElement("div");
     element.style.cssText = `
       display: flex;
       align-items: center;
       padding: 8px;
-      background: #f8f8f8;
-      border-top: 1px solid #ddd;
+      background: var(--bar-background, #f8f8f8);
+      border-top: 1px solid var(--bar-border-color, #ddd);
       min-height: 40px;
       flex-wrap: wrap;
     `;

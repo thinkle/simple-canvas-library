@@ -1,4 +1,4 @@
-import { UIComponent } from './UIComponent';
+import { UIComponent } from "./UIComponent";
 
 /**
  * Configuration for creating a number input
@@ -22,8 +22,8 @@ export class NumberInput extends UIComponent {
   private label?: HTMLLabelElement;
 
   constructor(config: NumberInputConfig) {
-    const container = document.createElement('div');
-    
+    const container = document.createElement("div");
+
     if (config.class) {
       container.className = config.class;
     } else {
@@ -32,25 +32,27 @@ export class NumberInput extends UIComponent {
         align-items: center;
         margin: 4px;
         gap: 8px;
+        background: var(--input-container-background, transparent);
       `;
     }
 
     let label: HTMLLabelElement | undefined;
     // Create label if provided
     if (config.label) {
-      label = document.createElement('label');
-      label.textContent = config.label + ':';
+      label = document.createElement("label");
+      label.textContent = config.label + ":";
       label.style.cssText = `
         font-size: 14px;
         font-weight: bold;
+        color: var(--label-color, #222);
       `;
       container.appendChild(label);
     }
 
     // Create input
-    const input = document.createElement('input');
-    input.type = 'number';
-    
+    const input = document.createElement("input");
+    input.type = "number";
+
     if (config.min !== undefined) input.min = config.min.toString();
     if (config.max !== undefined) input.max = config.max.toString();
     if (config.step !== undefined) input.step = config.step.toString();
@@ -59,14 +61,16 @@ export class NumberInput extends UIComponent {
     if (!config.class) {
       input.style.cssText = `
         padding: 4px 8px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--input-border-color, #ccc);
         border-radius: 4px;
         font-size: 14px;
         width: 80px;
+        background: var(--input-background, #fff);
+        color: var(--input-text-color, #222);
       `;
     }
 
-    input.addEventListener('input', () => {
+    input.addEventListener("input", () => {
       const value = parseFloat(input.value);
       if (!isNaN(value)) {
         config.oninput(value);
@@ -76,7 +80,7 @@ export class NumberInput extends UIComponent {
     container.appendChild(input);
 
     super(container);
-    
+
     // Now assign to instance properties after super()
     this.config = config;
     this.input = input;
@@ -104,7 +108,7 @@ export class NumberInput extends UIComponent {
    */
   setLabel(label: string): this {
     if (this.label) {
-      this.label.textContent = label + ':';
+      this.label.textContent = label + ":";
     }
     return this;
   }
