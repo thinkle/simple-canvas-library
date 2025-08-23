@@ -40,7 +40,7 @@ function transformDemoScript(script) {
 // Generate HTML template for a demo
 function generateDemoHTML(demoScript, metadata, fileName) {
   const transformedScript = transformDemoScript(demoScript);
-  
+
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
