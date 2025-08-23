@@ -6,6 +6,18 @@ export { Sprite } from "./Sprite";
 export type { SpriteConfig } from "./Sprite";
 export type { Size, DrawingParams } from "./types";
 
+// UI Components
+export { GameInterface } from "./GameInterface";
+export type { GameInterfaceConfig } from "./GameInterface";
+export { UIComponent } from "./UIComponent";
+export { Button } from "./Button";
+export type { ButtonConfig } from "./Button";
+export { NumberInput } from "./NumberInput";
+export type { NumberInputConfig } from "./NumberInput";
+export { Slider } from "./Slider";
+export type { SliderConfig } from "./Slider";
+export { TopBar, BottomBar, UIBar } from "./UIBar";
+
 /**
  * Test library function for demonstration purposes.
  * Creates a canvas element and demonstrates basic functionality.
