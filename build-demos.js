@@ -30,11 +30,17 @@ function parseDemoMetadata(content) {
 
 // Transform demo script to use built library instead of TypeScript source
 function transformDemoScript(script) {
-  // Replace TypeScript imports with built library imports
-  return script.replace(
-    /import\s+{([^}]+)}\s+from\s+["']\.\.\/src\/index\.ts["']/g,
-    'import { $1 } from "../dist/simple-canvas-library.es.js"'
-  );
+  // In development mode (when NODE_ENV is not production), keep TypeScript imports
+  // In production, replace with built library imports
+  if (process.env.NODE_ENV === 'production') {
+    return script.replace(
+      /import\s+{([^}]+)}\s+from\s+["']\.\.\/src\/index\.ts["']/g,
+      'import { $1 } from "../dist/simple-canvas-library.es.js"'
+    );
+  } else {
+    // Development mode - keep TypeScript imports for hot reloading
+    return script;
+  }
 }
 
 // Generate HTML template for a demo

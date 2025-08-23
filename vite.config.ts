@@ -19,6 +19,23 @@ function demosPlugin() {
           }
         });
       }
+
+      // Also watch src directory for library changes
+      const srcDir = path.resolve("./src");
+      if (fs.existsSync(srcDir)) {
+        const addSrcFiles = (dir: string) => {
+          const files = fs.readdirSync(dir);
+          files.forEach((file) => {
+            const fullPath = path.join(dir, file);
+            if (fs.statSync(fullPath).isDirectory()) {
+              addSrcFiles(fullPath);
+            } else if (file.endsWith(".ts")) {
+              this.addWatchFile(fullPath);
+            }
+          });
+        };
+        addSrcFiles(srcDir);
+      }
     },
     handleHotUpdate({ file, server }) {
       // If a demo script file changed, rebuild demos

@@ -1,5 +1,5 @@
 import { DrawingParams } from "./types";
-
+console.log("Importing Sprite.ts");
 /**
  * Sprite config type
  */
@@ -10,6 +10,7 @@ export type SpriteConfig = {
   frameWidth: number;
   frameHeight: number;
   frame?: number;
+  frames?: number; // Total number of frames to use (overrides calculated frames)
   animate?: boolean;
   frameSequence?: number[];
   angle?: number;
@@ -17,6 +18,7 @@ export type SpriteConfig = {
   targetHeight?: number;
   frameRate?: number;
   repeat?: boolean;
+  flipHorizontal?: boolean; // Whether to flip the sprite horizontally
   update?: (sprite: Sprite, cfg: any) => void;
 };
 
@@ -74,6 +76,7 @@ export class Sprite {
   public repeat: boolean;
   public removeOnNextFrame?: boolean;
   public frames?: number;
+  public flipHorizontal: boolean;
 
   /**
    * Creates a new Sprite instance.
@@ -92,6 +95,7 @@ export class Sprite {
    * @param config.frameRate - Number of frames per second to run animation at (default: 24).
    * @param config.repeat - Whether to repeat the animation or play only once (default: true)
    * @param config.angle - Angle to rotate drawing (in radians)
+   * @param config.flipHorizontal - Whether to flip the sprite horizontally (default: false)
    * @param config.update - a callback to run on each animation frame just before drawing sprite to canvas.
    */
   constructor({
@@ -99,6 +103,7 @@ export class Sprite {
     x = 0,
     y = 0,
     frame = 0,
+    frames, // Add frames parameter
     animate = true,
     frameSequence,
     frameWidth,
@@ -108,6 +113,7 @@ export class Sprite {
     targetHeight,
     frameRate = 24,
     repeat = true,
+    flipHorizontal = false,
     update,
   }: SpriteConfig) {
     if (!frameWidth)
@@ -121,8 +127,21 @@ export class Sprite {
     this.image = new Image();
     this.image.onload = () => {
       this.ready = true;
-      if (!this.frames) {
+      // Set frames from parameter or calculate from grid
+      if (frames) {
+        this.frames = frames;
+        console.log(
+          "Defined sprite with",
+          this.frames,
+          "frames (from parameter)"
+        );
+      } else {
         this.frames = this.framesAcross * this.framesDown;
+        console.log(
+          "Defined sprite with",
+          this.frames,
+          "frames (calculated from grid)"
+        );
       }
     };
     this.image.src = src;
@@ -139,6 +158,8 @@ export class Sprite {
     this.targetHeight = targetHeight || frameHeight;
     this.update = update;
     this.repeat = repeat;
+    this.flipHorizontal = flipHorizontal;
+    console.log("Defined sprite with", this.frames, "frames", frames);
   }
 
   get framesAcross() {
@@ -148,13 +169,14 @@ export class Sprite {
     return this.image.height / this.frameHeight;
   }
   get frame() {
+    const totalFrames = this.frames ?? 1; // Fallback to 1 if frames not set yet
     if (this.repeat) {
       if (this.frameSequence) {
         const sequenceIndex =
           this.frameAnimationIndex % this.frameSequence.length;
         return this.frameSequence[Math.floor(sequenceIndex)];
       } else {
-        return this.frameAnimationIndex % (this.frames ?? 1);
+        return this.frameAnimationIndex % totalFrames;
       }
     } else {
       if (this.frameSequence) {
@@ -165,10 +187,7 @@ export class Sprite {
           )
         ];
       } else {
-        return Math.min(
-          Math.floor(this.frameAnimationIndex),
-          (this.frames ?? 1) - 1
-        );
+        return Math.min(Math.floor(this.frameAnimationIndex), totalFrames - 1);
       }
     }
   }
@@ -209,17 +228,25 @@ export class Sprite {
       if (this.update) {
         this.update(this, cfg);
       }
-      if (this.angle) {
-        ctx.translate(
-          this.x + this.targetWidth / 2,
-          this.y + this.targetHeight / 2
-        );
-        ctx.rotate(this.angle);
-        ctx.translate(
-          -(this.x + this.targetWidth / 2),
-          -(this.y + this.targetHeight / 2)
-        );
+
+      // Apply transformations (rotation and horizontal flip)
+      if (this.angle || this.flipHorizontal) {
+        const centerX = this.x + this.targetWidth / 2;
+        const centerY = this.y + this.targetHeight / 2;
+
+        ctx.translate(centerX, centerY);
+
+        if (this.flipHorizontal) {
+          ctx.scale(-1, 1);
+        }
+
+        if (this.angle) {
+          ctx.rotate(this.angle);
+        }
+
+        ctx.translate(-centerX, -centerY);
       }
+
       ctx.drawImage(
         this.image,
         this.frameX,
