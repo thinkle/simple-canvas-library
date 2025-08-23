@@ -46,6 +46,22 @@ function transformDemoScript(script) {
 // Generate HTML template for a demo
 function generateDemoHTML(demoScript, metadata, fileName) {
   const transformedScript = transformDemoScript(demoScript);
+  
+  // Check if this is a GameInterface demo
+  const isGameInterfaceDemo = demoScript.includes('GameInterface') || demoScript.includes('game-interface');
+  
+  // Choose appropriate demo container based on type
+  const demoContainerHTML = isGameInterfaceDemo 
+    ? `<div class="canvas-section">
+        <h3>Demo</h3>
+        <div id="demo-container"></div>
+        <p><small>GameInterface creates its own complete UI structure.</small></p>
+      </div>`
+    : `<div class="canvas-section">
+        <h3>Demo</h3>
+        <canvas id="demo-canvas" width="400" height="300"></canvas>
+        <p><small>Canvas will resize automatically if resize handling is enabled in the demo.</small></p>
+      </div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -166,11 +182,7 @@ function generateDemoHTML(demoScript, metadata, fileName) {
     </div>
 
     <div class="demo-container">
-      <div class="canvas-section">
-        <h3>Demo</h3>
-        <canvas id="demo-canvas" width="400" height="300"></canvas>
-        <p><small>Canvas will resize automatically if resize handling is enabled in the demo.</small></p>
-      </div>
+      ${demoContainerHTML}
 
       <div class="code-section">
         <div class="code-header">Source Code</div>

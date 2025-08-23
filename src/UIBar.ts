@@ -1,6 +1,7 @@
 import { UIComponent } from './UIComponent';
 import { Button, ButtonConfig } from './Button';
 import { NumberInput, NumberInputConfig } from './NumberInput';
+import { Slider, SliderConfig } from './Slider';
 
 /**
  * Base class for UI bars (top/bottom)
@@ -30,6 +31,16 @@ export abstract class UIBar extends UIComponent {
     this.components.push(input);
     this.element.appendChild(input.getElement());
     return input;
+  }
+
+  /**
+   * Add a slider to the bar
+   */
+  addSlider(config: SliderConfig): Slider {
+    const slider = new Slider(config);
+    this.components.push(slider);
+    this.element.appendChild(slider.getElement());
+    return slider;
   }
 
   /**

@@ -41,6 +41,7 @@ export class GameInterface extends GameCanvas {
   private topBar?: TopBar;
   private bottomBar?: BottomBar;
   private config: GameInterfaceConfig;
+  private gameState: 'stopped' | 'running' | 'paused' = 'stopped';
 
   constructor(config: GameInterfaceConfig = {}) {
     // Create the canvas element first
@@ -77,7 +78,7 @@ export class GameInterface extends GameCanvas {
       `;
     }
 
-    // Create canvas container
+    // Create canvas container with responsive sizing
     this.canvasContainer = document.createElement('div');
     this.canvasContainer.style.cssText = `
       flex: 1;
@@ -86,6 +87,16 @@ export class GameInterface extends GameCanvas {
       align-items: center;
       background: #fafafa;
       min-height: 200px;
+      padding: 10px;
+      box-sizing: border-box;
+    `;
+
+    // Make canvas responsive within its container
+    canvas.style.cssText = `
+      max-width: 100%;
+      max-height: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
     `;
 
     // Add canvas to container
@@ -247,6 +258,52 @@ export class GameInterface extends GameCanvas {
    */
   getContainer(): HTMLElement {
     return this.container;
+  }
+
+  /**
+   * Get the current game state
+   */
+  getGameState(): 'stopped' | 'running' | 'paused' {
+    return this.gameState;
+  }
+
+  /**
+   * Start the game (override parent to track state)
+   */
+  run(): void {
+    super.run();
+    this.gameState = 'running';
+  }
+
+  /**
+   * Pause the game
+   */
+  pause(): void {
+    super.stop();
+    this.gameState = 'paused';
+  }
+
+  /**
+   * Resume the game
+   */
+  resume(): void {
+    super.run();
+    this.gameState = 'running';
+  }
+
+  /**
+   * Stop the game completely
+   */
+  stop(): void {
+    super.stop();
+    this.gameState = 'stopped';
+  }
+
+  /**
+   * Reset the game (alias for stop)
+   */
+  reset(): void {
+    this.stop();
   }
 
   /**

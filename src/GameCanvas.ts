@@ -79,6 +79,8 @@ export class GameCanvas {
   private drawingMetadata: Array<any>;
   private handlers: { [key: string]: Array<Function> };
   private autoresize: boolean;
+  private animationFrameId?: number;
+  private isRunning: boolean = false;
 
   /**
    * Creates a new GameCanvas instance.
@@ -230,7 +232,9 @@ export class GameCanvas {
 
   private tick = (ts?: number) => {
     this.doDrawing(ts ?? performance.now());
-    window.requestAnimationFrame(this.tick);
+    if (this.isRunning) {
+      this.animationFrameId = window.requestAnimationFrame(this.tick);
+    }
   };
 
   /**
@@ -243,7 +247,28 @@ export class GameCanvas {
       this.canvas.width = this.canvas.clientWidth;
       this.canvas.height = this.canvas.clientHeight;
     }
+    this.isRunning = true;
     this.tick();
+  }
+
+  /**
+   * Stop the game animation loop.
+   * @method
+   */
+  public stop() {
+    this.isRunning = false;
+    if (this.animationFrameId) {
+      window.cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = undefined;
+    }
+  }
+
+  /**
+   * Check if the game is currently running.
+   * @returns Whether the game is running
+   */
+  public getIsRunning(): boolean {
+    return this.isRunning;
   }
 
   /**

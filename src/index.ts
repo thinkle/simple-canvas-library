@@ -14,6 +14,8 @@ export { Button } from "./Button";
 export type { ButtonConfig } from "./Button";
 export { NumberInput } from "./NumberInput";
 export type { NumberInputConfig } from "./NumberInput";
+export { Slider } from "./Slider";
+export type { SliderConfig } from "./Slider";
 export { TopBar, BottomBar, UIBar } from "./UIBar";
 
 /**
