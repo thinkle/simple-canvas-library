@@ -10,7 +10,7 @@ import { GameInterface } from "../src/index.ts";
 const demoContainer = document.getElementById('demo-container');
 const gi = new GameInterface({
   canvasSize: { width: 400, height: 300 },
-  autoresize: false,
+  autoresize: true,
   parent: demoContainer || document.body // Fallback to body if container doesn't exist
 });
 
@@ -141,7 +141,7 @@ const greenButton = bottomBar.addButton({
 // Toggle controls demonstration
 const controlsToggle = bottomBar.addButton({
   text: "Hide Controls",
-  onclick: function() {
+  onclick: function () {
     if (speedSlider.getIsVisible()) {
       speedSlider.hide();
       sizeInput.hide();
@@ -160,46 +160,46 @@ gi.addDrawing(({ ctx, width, height, stepTime }) => {
   if (gi.getGameState() !== 'running') {
     // Just redraw the ball in current position if paused
     ctx.clearRect(0, 0, width, height);
-    
+
     // Draw ball
     ctx.beginPath();
-    ctx.arc(ballX, ballY, ballSize/2, 0, Math.PI * 2);
+    ctx.arc(ballX, ballY, ballSize / 2, 0, Math.PI * 2);
     ctx.fillStyle = ballColor;
     ctx.fill();
     ctx.strokeStyle = ballColor === '#007cba' ? '#005a8a' : '#333';
     ctx.lineWidth = 2;
     ctx.stroke();
-    
+
     // Draw "PAUSED" text if paused
     if (gi.getGameState() === 'paused') {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.font = '24px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('PAUSED', width/2, height/2 - 30);
+      ctx.fillText('PAUSED', width / 2, height / 2 - 30);
     }
     return;
   }
 
   // Clear canvas
   ctx.clearRect(0, 0, width, height);
-  
+
   // Update ball position based on actual speed
   ballX += ballVelX * (stepTime / 16); // Normalize for 60fps
   ballY += ballVelY * (stepTime / 16);
 
   // Bounce off walls
-  if (ballX <= ballSize/2 || ballX >= width - ballSize/2) {
+  if (ballX <= ballSize / 2 || ballX >= width - ballSize / 2) {
     ballVelX = -ballVelX;
-    ballX = Math.max(ballSize/2, Math.min(width - ballSize/2, ballX));
+    ballX = Math.max(ballSize / 2, Math.min(width - ballSize / 2, ballX));
   }
-  if (ballY <= ballSize/2 || ballY >= height - ballSize/2) {
+  if (ballY <= ballSize / 2 || ballY >= height - ballSize / 2) {
     ballVelY = -ballVelY;
-    ballY = Math.max(ballSize/2, Math.min(height - ballSize/2, ballY));
+    ballY = Math.max(ballSize / 2, Math.min(height - ballSize / 2, ballY));
   }
 
   // Draw ball
   ctx.beginPath();
-  ctx.arc(ballX, ballY, ballSize/2, 0, Math.PI * 2);
+  ctx.arc(ballX, ballY, ballSize / 2, 0, Math.PI * 2);
   ctx.fillStyle = ballColor;
   ctx.fill();
   ctx.strokeStyle = ballColor === '#007cba' ? '#005a8a' : '#333';
