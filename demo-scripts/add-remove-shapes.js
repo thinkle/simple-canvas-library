@@ -1,139 +1,128 @@
 /**
- * @demo Add and Remove Shapes
- * @description Interactive demo showing how to add and remove individual drawings. Click empty space to add random shapes (circle, square, triangle) with random colors. Click on any shape to remove it specifically.
- * @tags interaction, click, events, add, remove, shapes
+ * @demo Add and Remove Shapes (UI Builder Version)
+ * @description Interactive demo using GameInterface for shape management. Add shapes with a button, animate them, and remove shapes with another button.
+ * @tags ui, interface, buttons, animation, shapes
  */
 
-import { GameCanvas } from "../src/index.ts";
+import { GameInterface } from "../src/index.ts";
 
-const game = new GameCanvas("demo-canvas");
+const demoContainer = document.getElementById('demo-container');
+const gi = new GameInterface({
+  canvasSize: { width: 400, height: 300 },
+  autoresize: true,
+  parent: demoContainer || document.body
+});
 
-// Different shapes and colors for variety
 const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'];
 const shapes = ['circle', 'square', 'triangle'];
-
-// Track all active drawings with their metadata
 const activeShapes = new Map();
 
-// Shape drawing functions
+// Animated shape drawing functions
 const shapeDrawers = {
-  circle: (ctx, x, y, color, size) => {
+  circle: ({ ctx, x, y, color, size, t }) => {
+    ctx.save();
+    ctx.translate(x, y);
+    // Pulse effect: size oscillates
+    const pulse = size * (0.85 + 0.15 * Math.sin(t * 2));
     ctx.beginPath();
+    ctx.arc(0, 0, pulse, 0, Math.PI * 2);
     ctx.fillStyle = color;
-    ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 2;
     ctx.stroke();
+    ctx.restore();
   },
-  
-  square: (ctx, x, y, color, size) => {
+  square: ({ ctx, x, y, color, size, t }) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(t);
     ctx.fillStyle = color;
-    ctx.fillRect(x - size, y - size, size * 2, size * 2);
+    ctx.fillRect(-size, -size, size * 2, size * 2);
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 2;
-    ctx.strokeRect(x - size, y - size, size * 2, size * 2);
+    ctx.strokeRect(-size, -size, size * 2, size * 2);
+    ctx.restore();
   },
-  
-  triangle: (ctx, x, y, color, size) => {
+  triangle: ({ ctx, x, y, color, size, t }) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(t);
     ctx.beginPath();
-    ctx.fillStyle = color;
-    ctx.moveTo(x, y - size);
-    ctx.lineTo(x - size, y + size);
-    ctx.lineTo(x + size, y + size);
+    ctx.moveTo(0, -size);
+    ctx.lineTo(-size, size);
+    ctx.lineTo(size, size);
     ctx.closePath();
+    ctx.fillStyle = color;
     ctx.fill();
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 2;
     ctx.stroke();
+    ctx.restore();
   }
 };
 
-// Check if a point is inside a shape
-function isPointInShape(px, py, shape) {
-  const dx = px - shape.x;
-  const dy = py - shape.y;
-  
-  switch (shape.shape) {
-    case 'circle':
-      return dx * dx + dy * dy <= shape.size * shape.size;
-    
-    case 'square':
-      return Math.abs(dx) <= shape.size && Math.abs(dy) <= shape.size;
-    
-    case 'triangle':
-      // Simple triangle hit detection using barycentric coordinates
-      // For simplicity, we'll use a circular approximation
-      return dx * dx + dy * dy <= shape.size * shape.size;
-    
-    default:
-      return false;
-  }
-}
-
-// Find which shape (if any) was clicked
-function findClickedShape(x, y) {
-  for (const [id, shape] of activeShapes) {
-    if (isPointInShape(x, y, shape)) {
-      return id;
-    }
-  }
-  return null;
-}
-
-// Add a new random shape at the given position
-function addRandomShape(x, y) {
+function addRandomShape() {
   const color = colors[Math.floor(Math.random() * colors.length)];
   const shape = shapes[Math.floor(Math.random() * shapes.length)];
-  const size = 20 + Math.random() * 20; // Random size between 20-40
-  
-  const shapeData = { x, y, color, shape, size };
-  
-  // Create the drawing function
-  const drawingId = game.addDrawing(function({ ctx }) {
-    shapeDrawers[shape](ctx, x, y, color, size);
+  const size = 20 + Math.random() * 20;
+  const x = 60 + Math.random() * 280;
+  const y = 60 + Math.random() * 180;
+  let t = 0;
+
+  // Animated drawing
+  const drawingId = gi.addDrawing(({ ctx, stepTime }) => {
+    t += stepTime / 400; // Animate rotation
+    shapeDrawers[shape]({ ctx, x, y, color, size, t });
   });
-  
-  // Store the shape data with its drawing ID
-  activeShapes.set(drawingId, shapeData);
-  
+
+  activeShapes.set(drawingId, { x, y, color, shape, size, t });
   return drawingId;
 }
 
-// Remove a shape by its ID
-function removeShape(id) {
-  if (activeShapes.has(id)) {
-    game.removeDrawing(id);
-    activeShapes.delete(id);
-  }
+function removeRandomShape() {
+  const keys = Array.from(activeShapes.keys());
+  if (keys.length === 0) return;
+  const id = keys[Math.floor(Math.random() * keys.length)];
+  gi.removeDrawing(id);
+  activeShapes.delete(id);
 }
 
-// Add click handler
-game.addClickHandler(function({ x, y }) {
-  // Check if we clicked on an existing shape
-  const clickedShapeId = findClickedShape(x, y);
-  
-  if (clickedShapeId !== null) {
-    // Remove the clicked shape
-    removeShape(clickedShapeId);
-  } else {
-    // Add a new shape at the click position
-    addRandomShape(x, y);
-  }
+function removeLastShape() {
+  const keys = Array.from(activeShapes.keys());
+  if (keys.length === 0) return;
+  const id = keys[keys.length - 1];
+  gi.removeDrawing(id);
+  activeShapes.delete(id);
+}
+
+// UI Controls
+const topBar = gi.addTopBar();
+topBar.addButton({
+  text: "Add Shape",
+  style: { color: '#22c55e', textColor: 'white', fontSize: '16px' },
+  onclick: addRandomShape
+});
+topBar.addButton({
+  text: "Remove Last Shape",
+  style: { color: '#f59e42', textColor: 'white', fontSize: '16px' },
+  onclick: removeLastShape
+});
+topBar.addButton({
+  text: "Remove Random Shape",
+  style: { color: '#ff6b6b', textColor: 'white', fontSize: '16px' },
+  onclick: removeRandomShape
 });
 
-// Add some initial shapes to demonstrate
-addRandomShape(100, 100);
-addRandomShape(200, 150);
-addRandomShape(300, 200);
-
-// Add instructions
-game.addDrawing(function({ ctx, width, height }) {
+gi.addDrawing(({ ctx, width, height }) => {
   ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
   ctx.font = '14px sans-serif';
-  ctx.fillText('Click empty space to add random shapes', 10, 25);
-  ctx.fillText('Click on shapes to remove them', 10, 45);
+  ctx.fillText('Use the buttons to add/remove animated shapes.', 10, 25);
   ctx.fillText(`Active shapes: ${activeShapes.size}`, 10, height - 15);
 });
 
-game.run();
+gi.run();
+// Add a few initial shapes
+addRandomShape();
+addRandomShape();
+addRandomShape();
