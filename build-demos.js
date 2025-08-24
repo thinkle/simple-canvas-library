@@ -5,6 +5,15 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load demo configuration
+function loadDemoConfig() {
+  const configPath = path.join(__dirname, 'demo-config.json');
+  if (!fs.existsSync(configPath)) {
+    throw new Error('demo-config.json not found. Please create this file to configure demo organization.');
+  }
+  return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+}
+
 // Parse demo metadata from JS file comments
 function parseDemoMetadata(content) {
   const metadata = {
@@ -304,12 +313,72 @@ function escapeHtml(text) {
 }
 
 // Generate index page with all demos
-function generateIndexHTML(demos) {
+function generateIndexHTML(demos, config) {
+  const { demoConfig, categories, demoOrder } = config;
+
+  // Sort demos according to configuration
+  const orderedDemos = [];
+  const demoMap = new Map(demos.map(demo => [demo.fileName, demo]));
+
+  // Add demos in the order specified in config
+  for (const configDemo of demoOrder) {
+    const demo = demoMap.get(configDemo.file);
+    if (demo) {
+      demo.config = configDemo; // Add config info to demo
+      orderedDemos.push(demo);
+      demoMap.delete(configDemo.file);
+    }
+  }
+
+  // Add any remaining demos not in config
+  orderedDemos.push(...Array.from(demoMap.values()).map(demo => {
+    demo.config = { priority: 999 }; // Default low priority
+    return demo;
+  }));
+
+  // Group demos by category
+  const groupedDemos = {
+    featured: orderedDemos.filter(demo => demo.config.featured),
+    debugging: orderedDemos.filter(demo => demo.config.category === 'debugging'),
+    distribution: orderedDemos.filter(demo => demo.config.category === 'distribution'),
+    all: orderedDemos
+  };
+
+  function renderDemoCard(demo) {
+    return `
+        <div class="demo-card">
+          <h3>${demo.metadata.title}</h3>
+          <p>${demo.metadata.description}</p>
+          <a href="${demo.fileName}.html" class="demo-link">View Demo</a>
+          ${demo.metadata.tags.length > 0 ? `
+          <div class="tags">
+            ${demo.metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
+          ` : ''}
+        </div>`;
+  }
+
+  function renderDemoSection(categoryKey, demos) {
+    if (!demos.length) return '';
+
+    const category = categories[categoryKey];
+    return `
+      <div class="demo-section">
+        <div class="section-header">
+          <h2>${category.title}</h2>
+          <p>${category.description}</p>
+        </div>
+        <div class="demo-grid">
+          ${demos.map(renderDemoCard).join('')}
+        </div>
+      </div>`;
+  }
+
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>SimpleCanvasLibrary Demos</title>
+    <title>${demoConfig.title}</title>
     <style>
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -326,6 +395,21 @@ function generateIndexHTML(demos) {
         padding: 40px 20px;
         border-radius: 10px;
         margin-bottom: 30px;
+      }
+      .demo-section {
+        margin: 40px 0;
+      }
+      .section-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .section-header h2 {
+        color: #333;
+        margin-bottom: 8px;
+      }
+      .section-header p {
+        color: #666;
+        margin: 0;
       }
       .demo-grid {
         display: grid;
@@ -396,34 +480,80 @@ function generateIndexHTML(demos) {
       .nav-link:hover {
         text-decoration: underline;
       }
+      
+      /* Category navigation */
+      .category-nav {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .category-nav-link {
+        display: inline-block;
+        color: #666;
+        text-decoration: none;
+        margin: 0 10px;
+        padding: 5px 12px;
+        border-radius: 15px;
+        transition: all 0.2s;
+        font-size: 14px;
+      }
+      .category-nav-link:hover {
+        background: #f0f0f0;
+        color: #333;
+      }
     </style>
   </head>
   <body>
     <div class="navigation">
-      <a href="../docs/index.html" class="nav-link">📖 API Documentation</a>
-      <a href="https://github.com/your-username/simple-canvas-library" class="nav-link">📦 GitHub Repository</a>
+      ${demoConfig.navigation.map(nav =>
+    `<a href="${nav.href}" class="nav-link">${nav.text}</a>`
+  ).join('')}
     </div>
 
     <div class="header">
-      <h1>SimpleCanvasLibrary Demos</h1>
-      <p>Interactive examples showcasing the features of SimpleCanvasLibrary</p>
-      <p><small>Each demo shows the exact source code that's running</small></p>
+      <h1>${demoConfig.title}</h1>
+      <p>${demoConfig.description}</p>
+      <p><small>${demoConfig.subtitle}</small></p>
     </div>
 
-    <div class="demo-grid">
-      ${demos.map(demo => `
-        <div class="demo-card">
-          <h3>${demo.metadata.title}</h3>
-          <p>${demo.metadata.description}</p>
-          <a href="${demo.fileName}.html" class="demo-link">View Demo</a>
-          ${demo.metadata.tags.length > 0 ? `
-          <div class="tags">
-            ${demo.metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-          </div>
-          ` : ''}
-        </div>
-      `).join('')}
+    <div class="category-nav">
+      <a href="#featured" class="category-nav-link">⭐ Featured</a>
+      <a href="#all" class="category-nav-link">📁 All Demos</a>
+      ${groupedDemos.debugging.length ? '<a href="#debugging" class="category-nav-link">🔧 Dev Tools</a>' : ''}
+      ${groupedDemos.distribution.length ? '<a href="#distribution" class="category-nav-link">📦 Distribution</a>' : ''}
     </div>
+
+    <div id="featured">
+      ${renderDemoSection('featured', groupedDemos.featured)}
+    </div>
+
+    <div id="debugging">
+      ${renderDemoSection('debugging', groupedDemos.debugging)}
+    </div>
+
+    <div id="distribution">
+      ${renderDemoSection('distribution', groupedDemos.distribution)}
+    </div>
+
+    <div id="all">
+      ${renderDemoSection('all', groupedDemos.all)}
+    </div>
+
+    <script>
+      // Smooth scrolling for category navigation
+      document.querySelectorAll('.category-nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.querySelector(e.target.getAttribute('href'));
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+    </script>
   </body>
 </html>`;
 }
@@ -432,6 +562,9 @@ function generateIndexHTML(demos) {
 async function generateDemos() {
   const demoScriptsDir = path.join(__dirname, 'demo-scripts');
   const demosDir = path.join(__dirname, 'demos');
+
+  // Load configuration
+  const config = loadDemoConfig();
 
   // Ensure demos directory exists
   if (!fs.existsSync(demosDir)) {
@@ -460,13 +593,14 @@ async function generateDemos() {
     console.log(`Generated ${fileName}.html`);
   }
 
-  // Generate index page
-  const indexHTML = generateIndexHTML(demos);
+  // Generate index page with configuration
+  const indexHTML = generateIndexHTML(demos, config);
   const indexPath = path.join(demosDir, 'index.html');
   fs.writeFileSync(indexPath, indexHTML);
 
   console.log('Generated demos/index.html');
   console.log(`Generated ${demos.length} demo files`);
+  console.log('Demo organization controlled by demo-config.json');
 }
 
 // Run if called directly

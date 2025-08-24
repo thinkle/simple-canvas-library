@@ -320,8 +320,26 @@ export class GameCanvas {
    */
   public addDrawing(
     d:
-      | ((params: DrawingParams) => void)
-      | { draw: (params: DrawingParams) => void }
+      | ((params: {
+          ctx: CanvasRenderingContext2D;
+          width: number;
+          height: number;
+          elapsed: number;
+          timestamp: number;
+          stepTime: number;
+          remove: () => void;
+        }) => void)
+      | { 
+          draw: (params: {
+            ctx: CanvasRenderingContext2D;
+            width: number;
+            height: number;
+            elapsed: number;
+            timestamp: number;
+            stepTime: number;
+            remove: () => void;
+          }) => void 
+        }
   ): number {
     this.drawings.push(d);
     this.drawingMetadata.push({});
@@ -376,6 +394,23 @@ export class GameCanvas {
   /**
    * Register a handler h for eventType
    */
+  public addHandler(eventType: "click" | "dblclick" | "mousedown" | "mousemove" | "mouseup", h: (params: {
+    x: number;
+    y: number;
+    type: string;
+    event: Event;
+  }) => boolean | void): number;
+  public addHandler(eventType: "keyup" | "keydown" | "keypress", h: (params: {
+    type: string;
+    event: KeyboardEvent;
+  }) => boolean | void): number;
+  public addHandler(eventType: "resize", h: (params: {
+    ctx: CanvasRenderingContext2D;
+    width: number;
+    height: number;
+    canvas: HTMLCanvasElement;
+    setCanvasSize: (w: number, h: number) => void;
+  }) => boolean | void): number;
   public addHandler(eventType: string, h: Function): number {
     if (!this.handlers[eventType]) {
       throw new Error(
@@ -432,7 +467,12 @@ export class GameCanvas {
    * )
    * ```
    */
-  public addClickHandler(h: Function): number {
+  public addClickHandler(h: (params: {
+    x: number;
+    y: number;
+    type: string;
+    event: Event;
+  }) => boolean | void): number {
     if (typeof h !== "function") {
       throw new Error(
         `addClickHandler requires a function as an argument. ${h} is a ${typeof h}, not a function.`
@@ -452,7 +492,13 @@ export class GameCanvas {
   /**
    * Register a handler h for resize
    */
-  public addResizeHandler(h: Function): number {
+  public addResizeHandler(h: (params: {
+    ctx: CanvasRenderingContext2D;
+    width: number;
+    height: number;
+    canvas: HTMLCanvasElement;
+    setCanvasSize: (w: number, h: number) => void;
+  }) => boolean | void): number {
     return this.addHandler("resize", h);
   }
 

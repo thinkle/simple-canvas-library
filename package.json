@@ -10,7 +10,9 @@
     "dev": "npm run build:demos && vite",
     "build": "vite build",
     "build:demos": "node build-demos.js",
-    "docs": "typedoc --out docs src/index.ts"
+    "docs": "typedoc --out docs src/index.ts",
+    "demo:list": "node demo-manager.js list",
+    "demo:manage": "node demo-manager.js"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,83 @@
+{
+  "demoConfig": {
+    "title": "SimpleCanvasLibrary Demos",
+    "description": "Interactive examples showcasing the features of SimpleCanvasLibrary",
+    "subtitle": "Each demo shows the exact source code that's running",
+    "navigation": [
+      {
+        "text": "📖 API Documentation",
+        "href": "../docs/index.html"
+      },
+      {
+        "text": "📦 GitHub Repository",
+        "href": "https://github.com/thinkle/simple-canvas-library"
+      }
+    ]
+  },
+  "demoOrder": [
+    {
+      "file": "gravity",
+      "featured": true,
+      "priority": 1
+    },
+    {
+      "file": "advanced-cat-sprite",
+      "featured": true,
+      "priority": 2
+    },
+    {
+      "file": "basic-animation",
+      "featured": true,
+      "priority": 3
+    },
+    {
+      "file": "simple-click-handler",
+      "featured": true,
+      "priority": 4
+    },
+    {
+      "file": "simple-mousemove-handler",
+      "priority": 5
+    },
+    {
+      "file": "fancy-click-handler",
+      "priority": 6
+    },
+    {
+      "file": "simple-cat-sprite",
+      "priority": 7
+    },
+    {
+      "file": "resize-demo",
+      "priority": 8
+    },
+    {
+      "file": "spritesheet-inspector",
+      "category": "debugging",
+      "priority": 9
+    },
+    {
+      "file": "umd-build",
+      "category": "distribution",
+      "priority": 10
+    }
+  ],
+  "categories": {
+    "featured": {
+      "title": "Featured Demos",
+      "description": "Start here - these demos showcase the core features"
+    },
+    "debugging": {
+      "title": "Development Tools",
+      "description": "Utilities for debugging and development"
+    },
+    "distribution": {
+      "title": "Distribution & Integration",
+      "description": "Examples of using the library in different environments"
+    },
+    "all": {
+      "title": "All Demos",
+      "description": "Complete collection of all available demos"
+    }
+  }
+}
