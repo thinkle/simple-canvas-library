@@ -47,11 +47,30 @@ function transformDemoScript(script) {
 function generateDemoHTML(demoScript, metadata, fileName) {
   const transformedScript = transformDemoScript(demoScript);
 
+  // Check if this is a GameInterface demo
+  const isGameInterfaceDemo = demoScript.includes('GameInterface') || demoScript.includes('game-interface');
+
+  // Choose appropriate demo container based on type
+  const demoContainerHTML = isGameInterfaceDemo
+    ? `<div class="canvas-section">
+        <button id="popout-toggle" class="popout-toggle" aria-pressed="false" title="Pop out to full width/height">⤢ Pop out</button>
+        <h3>Demo</h3>
+        <div id="demo-container"></div>
+        <p><small>GameInterface creates its own complete UI structure.</small></p>
+      </div>`
+    : `<div class="canvas-section">
+        <button id="popout-toggle" class="popout-toggle" aria-pressed="false" title="Pop out to full width/height">⤢ Pop out</button>
+        <h3>Demo</h3>
+        <canvas id="demo-canvas" width="400" height="300"></canvas>
+        <p><small>Canvas will resize automatically if resize handling is enabled in the demo.</small></p>
+      </div>`;
+
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>SimpleCanvasLibrary: ${metadata.title}</title>
+    <base href="./">
     <style>
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -113,6 +132,14 @@ function generateDemoHTML(demoScript, metadata, fileName) {
         border-radius: 4px;
         display: block;
         margin: 10px 0;
+        /* make canvas responsive outside of popout */
+        width: 100%;
+        height: clamp(240px, 60vh, 75vh);
+      }
+      /* ensure GameInterface container can grow responsively too */
+      #demo-container {
+        width: 100%;
+        min-height: clamp(240px, 60vh, 75vh);
       }
       .tags {
         display: flex;
@@ -147,6 +174,54 @@ function generateDemoHTML(demoScript, metadata, fileName) {
           grid-template-columns: 1fr;
         }
       }
+
+      /* Pop-out (full-viewport) styles */
+      .canvas-section { position: relative; }
+      .popout-toggle {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 10;
+        background: #ffffffcc;
+        border: 1px solid #cfd8dc;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .popout-toggle:hover { background: #fff; }
+      body.popout-active { overflow: hidden; }
+      .popout-active .navigation,
+      .popout-active .header,
+      .popout-active .code-section { display: none !important; }
+      .popout-active .demo-container {
+        display: block;
+        margin: 0;
+      }
+      .popout-active .canvas-section {
+        position: fixed;
+        inset: 0;
+        /* Use dvw/dvh to avoid mobile UI shifts and include padding inside the box */
+        width: 100dvw;
+        height: 100dvh;
+        box-sizing: border-box;
+        padding: 16px; /* now produces visible inner gutters */
+        border-radius: 0;
+        box-shadow: none;
+        margin: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+      }
+      .popout-active #demo-container,
+      .popout-active #demo-canvas {
+        flex: 1 1 auto;
+        width: 100%;
+        height: 100%;
+        /* allow flex children to shrink within padded container */
+        min-width: 0;
+        min-height: 0;
+      }
     </style>
   </head>
   <body>
@@ -166,11 +241,7 @@ function generateDemoHTML(demoScript, metadata, fileName) {
     </div>
 
     <div class="demo-container">
-      <div class="canvas-section">
-        <h3>Demo</h3>
-        <canvas id="demo-canvas" width="400" height="300"></canvas>
-        <p><small>Canvas will resize automatically if resize handling is enabled in the demo.</small></p>
-      </div>
+      ${demoContainerHTML}
 
       <div class="code-section">
         <div class="code-header">Source Code</div>
@@ -182,6 +253,39 @@ function generateDemoHTML(demoScript, metadata, fileName) {
 
     <script type="module">
       ${transformedScript}
+
+      // Pop-out toggle logic with resize pulse to sync canvas size when popping in/out
+      const __popBtn = document.getElementById('popout-toggle');
+      if (__popBtn) {
+        const body = document.body;
+        const triggerResizePulse = () => {
+          // After layout flips, dispatch a couple of resize events
+          requestAnimationFrame(() => {
+            window.dispatchEvent(new Event('resize'));
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+          });
+        };
+        const activate = () => {
+          body.classList.add('popout-active');
+          __popBtn.setAttribute('aria-pressed', 'true');
+          __popBtn.textContent = '⤡ Exit pop out';
+          triggerResizePulse();
+        };
+        const deactivate = () => {
+          body.classList.remove('popout-active');
+          __popBtn.setAttribute('aria-pressed', 'false');
+          __popBtn.textContent = '⤢ Pop out';
+          triggerResizePulse();
+        };
+        __popBtn.addEventListener('click', () => {
+          body.classList.contains('popout-active') ? deactivate() : activate();
+        });
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && body.classList.contains('popout-active')) {
+            deactivate();
+          }
+        });
+      }
     </script>
   </body>
 </html>`;
