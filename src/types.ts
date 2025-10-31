@@ -1,4 +1,10 @@
 /**
+ * Type for a drawing object with a draw method used in GameCanvas.
+ */
+export type Drawer = {
+  draw: DrawingCallback;
+};
+/**
  * @file Shared types for SimpleCanvasLibrary (SimpleCanvas)
  * @module SimpleCanvas
  */
@@ -32,6 +38,11 @@ export type DrawingParams = {
   stepTime: number;
   remove: () => void;
 };
+
+/**
+ * Type for a drawing callback function used in GameCanvas.
+ */
+export type DrawingCallback = (params: DrawingParams) => void;
 
 /**
  * @callback SimpleCanvas.GameCanvas~eventCallback

@@ -4,7 +4,7 @@ import type { DrawingParams, EventCallbackArgs } from "./types";
 export { GameCanvas } from "./GameCanvas";
 export { Sprite } from "./Sprite";
 export type { SpriteConfig } from "./Sprite";
-export type { Size, DrawingParams } from "./types";
+export type { Size, DrawingParams, DrawingCallback, Drawer } from "./types";
 
 export { GameInterface } from "./GameInterface";
 export type { GameInterfaceConfig } from "./GameInterface";

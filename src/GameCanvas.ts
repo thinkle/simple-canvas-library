@@ -1,4 +1,4 @@
-import { Size, DrawingParams } from "./types";
+import { Size, DrawingParams, Drawer, DrawingCallback } from "./types";
 
 /**
  * GameCanvas sets up a canvas for creating a simple game in.
@@ -110,7 +110,7 @@ export class GameCanvas {
     this.drawings = [];
     this.drawingMetadata = [];
     this.handlers = { resize: [] };
-    this.autoresize = config.autoresize ?? true;
+    this.autoresize = config.autoresize ?? !config.size;
     this.setInitialCanvasSize(config.size);
     this.setupHandlers();
   }
@@ -243,11 +243,11 @@ export class GameCanvas {
    */
   public run() {
     // Only observe and resize if autoresize is true and no fixed size is set
-    const hasFixedSize = !!(this.canvas.getAttribute("width") || this.canvas.getAttribute("height"));
-    if (this.autoresize && !hasFixedSize) {
+
+    if (this.autoresize) {
       this.observeCanvasResize();
-      this.canvas.width = this.canvas.clientWidth;
-      this.canvas.height = this.canvas.clientHeight;
+      this.canvas.width = Math.min(this.canvas.clientWidth, this.width);
+      this.canvas.height = Math.min(this.canvas.clientHeight, this.height);
     }
     this.isRunning = true;
     this.tick();
@@ -320,29 +320,7 @@ export class GameCanvas {
    * );
    * ```
    */
-  public addDrawing(
-    d:
-      | ((params: {
-          ctx: CanvasRenderingContext2D;
-          width: number;
-          height: number;
-          elapsed: number;
-          timestamp: number;
-          stepTime: number;
-          remove: () => void;
-        }) => void)
-      | {
-          draw: (params: {
-            ctx: CanvasRenderingContext2D;
-            width: number;
-            height: number;
-            elapsed: number;
-            timestamp: number;
-            stepTime: number;
-            remove: () => void;
-          }) => void;
-        }
-  ): number {
+  public addDrawing(d: Drawer | DrawingCallback): number {
     this.drawings.push(d);
     this.drawingMetadata.push({});
     return this.drawings.length - 1;
