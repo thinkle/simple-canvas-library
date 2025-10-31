@@ -43,8 +43,9 @@ jobs:
       - name: Generate documentation
         run: npm run docs
 
-    - name: Generate demos
-      run: NODE_ENV=production npm run build:demos      - name: Create unified site structure
+      - name: Generate demos
+        run: NODE_ENV=production npm run build:demos
+      - name: Create unified site structure
         run: |
           # Create a unified site directory
           mkdir -p site
