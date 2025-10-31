@@ -54,8 +54,8 @@ export interface SliderConfig {
  * ```
  */
 export class Slider extends UIComponent {
-  private input: HTMLInputElement;
-  private valueDisplay: HTMLSpanElement;
+  private input!: HTMLInputElement;
+  private valueDisplay!: HTMLSpanElement;
   private config: SliderConfig;
 
   constructor(config: SliderConfig = {}) {

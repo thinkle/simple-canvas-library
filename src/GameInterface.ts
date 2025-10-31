@@ -1,5 +1,8 @@
 import { GameCanvas } from "./GameCanvas";
-import { TopBar, BottomBar } from "./UIBar";
+import { TopBar, BottomBar, UIBar } from "./UIBar";
+import { Button, ButtonConfig } from "./Button";
+import { NumberInput, NumberInputConfig } from "./NumberInput";
+import { Slider, SliderConfig } from "./Slider";
 import { Size } from "./types";
 
 /**
@@ -16,11 +19,14 @@ export interface GameInterfaceConfig {
   containerClass?: string;
   /** CSS variable overrides for this interface (e.g. { '--bar-background': '#222' }) */
   cssVars?: Record<string, string>;
+  /** If true, make the interface fullscreen (canvas fills viewport, no scroll) */
+  fullscreen?: boolean;
 }
 
 /**
  * GameInterface extends GameCanvas functionality with UI components.
  * Creates a complete game interface with top bar, canvas, and bottom bar.
+ * Provides methods to add UI controls, dialogs, and manage game state.
  *
  * @example
  * ```typescript
@@ -37,7 +43,42 @@ export interface GameInterfaceConfig {
  * gi.run();
  * ```
  */
+/**
+ * GameInterface extends GameCanvas functionality with UI components.
+ *
+ * This class provides a complete game interface with a top bar, canvas, and bottom bar.
+ * You can use it to add UI controls such as buttons, sliders, and number inputs to your game layout.
+ *
+ * ### Example: Add a top bar with a title
+ * ```typescript
+ * import { GameInterface } from "simple-canvas-library";
+ *
+ * const gi = new GameInterface();
+ * const topBar = gi.addTopBar();
+ * topBar.addButton({
+ *   text: "Game Title",
+ * });
+ *
+ * ### Example: Add a bottom bar with a button
+ * const bottomBar = gi.addBottomBar();
+ * bottomBar.addButton({
+ *   text: "Start Game",
+ *   onclick: () => gi.dialog("Game Started!", "Good luck!")
+ * });
+ *
+ * gi.run();
+ * ```
+ *
+ * See also:
+ * - {@link TopBar}
+ * - {@link BottomBar}
+ * - {@link Button}
+ * - {@link NumberInput}
+ * - {@link Slider}
+ * - {@link UIBar}
+ */
 export class GameInterface extends GameCanvas {
+  /** UI Components available for use in GameInterface */
   private container!: HTMLElement;
   private canvasContainer!: HTMLElement;
   private topBar?: TopBar;
@@ -65,17 +106,65 @@ export class GameInterface extends GameCanvas {
     // Create main container
     this.container = document.createElement("div");
 
-    if (this.config.containerClass) {
+    if (this.config.fullscreen) {
+      // Fullscreen mode: fill viewport, no scroll
+      this.container.style.cssText = `
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        border: none;
+        border-radius: 0;
+        overflow: hidden;
+        background: var(--container-background, #18181b);
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        /* Dark mode CSS variable defaults */
+        --container-background: #18181b;
+        --container-border-color: #222;
+        --canvas-container-background: #232326;
+        --canvas-background: #18181b;
+        --bar-background: #232326;
+        --bar-text-color: #e6e6e6;
+        --bar-border-color: #333;
+        --button-background: #232326;
+        --button-hover-background: #333;
+        --button-border-color: #333;
+        --button-text-color: #e6e6e6;
+        --input-background: #232326;
+        --input-border-color: #333;
+        --input-text-color: #e6e6e6;
+        --input-container-background: transparent;
+        --label-color: #e6e6e6;
+        --dialog-background: #232326;
+        --dialog-title-color: #e6e6e6;
+        --dialog-message-color: #b3b3b3;
+        --close-button-background: #22c55e;
+        --close-button-color: #18181b;
+        /* Slider specific */
+        --scl-font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        --scl-font-size: 14px;
+        --scl-color-text: #e6e6e6;
+        --scl-color-muted: #9ca3af;
+        --scl-color-accent: #22c55e;
+        --scl-input-bg: transparent;
+        --scl-input-track-bg: #444;
+        --scl-input-thumb-bg: #22c55e;
+        --scl-input-thumb-border: #18181b;
+      `;
+      document.body.style.overflow = "hidden";
+    } else if (this.config.containerClass) {
       this.container.className = this.config.containerClass;
     } else {
       this.container.style.cssText = `
-        display: flex;
+        display: inline-flex;
         flex-direction: column;
         border: 1px solid var(--container-border-color, #222);
         border-radius: 4px;
         overflow: hidden;
         background: var(--container-background, #18181b);
-        max-width: 100%;
         margin: 0 auto;
         /* Dark mode CSS variable defaults */
         --container-background: #18181b;
@@ -120,25 +209,50 @@ export class GameInterface extends GameCanvas {
 
     // Create canvas container with responsive sizing
     this.canvasContainer = document.createElement("div");
-    this.canvasContainer.style.cssText = `
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: var(--canvas-container-background, #fafafa);
-      min-height: 200px;
-      padding: 10px;
-      box-sizing: border-box;
-    `;
+    if (this.config.fullscreen) {
+      this.canvasContainer.style.cssText = `
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--canvas-container-background, #232326);
+        min-height: 0;
+        padding: 0;
+        box-sizing: border-box;
 
-    // Make canvas responsive within its container
-    canvas.style.cssText = `
-      max-width: 100%;
-      max-height: 100%;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background: var(--canvas-background, transparent);
-    `;
+      `;
+      canvas.style.cssText = `
+        width: 100vw;
+        max-width: 100vw;
+        max-height: 100vh;
+        height: 100%;
+        border: none;
+        border-radius: 0;
+        background: var(--canvas-background, transparent);
+        display: block;
+      `;
+    } else {
+      this.canvasContainer.style.cssText = `
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--canvas-container-background, #fafafa);
+        min-height: 200px;
+        padding: 10px;
+        box-sizing: border-box;
+      `;
+      canvas.style.cssText = `=      
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: var(--canvas-background, transparent);
+        display: block;
+      `;
+    }
 
     // Add canvas to container
     this.canvasContainer.appendChild(canvas);
@@ -364,3 +478,4 @@ export class GameInterface extends GameCanvas {
     }
   }
 }
+export { UIBar, BottomBar };

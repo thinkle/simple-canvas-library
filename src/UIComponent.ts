@@ -1,6 +1,7 @@
 /**
- * Base class for UI components that provides common functionality
- * like show/hide and enable/disable operations.
+ * Base class for UI components.
+ * Provides common functionality like show/hide, enable/disable, and access to the underlying DOM element.
+ * Extend this class to create custom UI controls.
  */
 export abstract class UIComponent {
   protected element: HTMLElement;

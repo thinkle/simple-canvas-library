@@ -8,9 +8,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "npm run build:demos && vite",
-    "build": "vite build",
+    "build": "vite build && tsc",
     "build:demos": "node build-demos.js",
-    "docs": "typedoc --out docs src/index.ts",
+    "docs": "typedoc --out docs src",
     "demo:list": "node demo-manager.js list",
     "demo:manage": "node demo-manager.js"
   },

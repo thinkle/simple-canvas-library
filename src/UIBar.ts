@@ -1,16 +1,77 @@
+/**
+ * @module UIBar
+ * UI bar components for SimpleCanvasLibrary.
+ */
 import { UIComponent } from "./UIComponent";
 import { Button, ButtonConfig } from "./Button";
 import { NumberInput, NumberInputConfig } from "./NumberInput";
 import { Slider, SliderConfig } from "./Slider";
 
 /**
- * Base class for UI bars (top/bottom)
+ * Base class for UI bars (top/bottom).
+ * Provides a flexible container for UI components such as buttons, sliders, and number inputs.
+ * Not intended to be used directly; use TopBar or BottomBar instead.
+ * @public
  */
 export abstract class UIBar extends UIComponent {
   protected components: UIComponent[] = [];
 
   constructor(element: HTMLElement) {
     super(element);
+  }
+
+  /**
+   * Set foreground and background colors for the bar using CSS variables.
+   * @param foreground - Text color
+   * @param background - Background color
+   */
+  setColor(foreground: string, background: string): this {
+    this.element.style.setProperty("--bar-background", background);
+    this.element.style.setProperty("--bar-text-color", foreground);
+    return this;
+  }
+
+  /**
+   * Add a title (non-interactive text) to the bar.
+   * Inherits bar foreground/background colors.
+   * @param text - Title text
+   * @param options - Optional style overrides
+   */
+  addTitle(text: string, options?: Partial<CSSStyleDeclaration>): HTMLElement {
+    const title = document.createElement("span");
+    title.textContent = text;
+    title.style.cssText = `
+      color: var(--bar-text-color, inherit);
+      background: var(--bar-background, inherit);
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-right: 16px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      user-select: none;
+      pointer-events: none;
+      display: inline-block;
+    `;
+    if (options) Object.assign(title.style, options);
+    this.element.appendChild(title);
+    return title;
+  }
+
+  /**
+   * Add arbitrary HTML or an HTMLElement to the bar.
+   * @param html - HTML string or HTMLElement
+   */
+  addHTML(html: string | HTMLElement): HTMLElement {
+    let el: HTMLElement;
+    if (typeof html === "string") {
+      const wrapper = document.createElement("span");
+      wrapper.innerHTML = html;
+      el = wrapper;
+    } else {
+      el = html;
+    }
+    this.element.appendChild(el);
+    return el;
   }
 
   /**
@@ -66,7 +127,9 @@ export abstract class UIBar extends UIComponent {
 }
 
 /**
- * Top bar for UI components
+ * TopBar is a horizontal bar for UI components, typically placed above the canvas.
+ * Use addButton, addSlider, addNumberInput to add controls.
+ * @public
  */
 export class TopBar extends UIBar {
   constructor() {
@@ -85,7 +148,9 @@ export class TopBar extends UIBar {
 }
 
 /**
- * Bottom bar for UI components
+ * BottomBar is a horizontal bar for UI components, typically placed below the canvas.
+ * Use addButton, addSlider, addNumberInput to add controls.
+ * @public
  */
 export class BottomBar extends UIBar {
   constructor() {
