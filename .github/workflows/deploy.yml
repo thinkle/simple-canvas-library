@@ -59,6 +59,8 @@ jobs:
           # Copy README as the main landing page content
           cp README.md site/
 
+          cp -r dist site/
+
           # Create an index.html that shows the README content
           cat > site/index.html << 'EOF'
           <!DOCTYPE html>
