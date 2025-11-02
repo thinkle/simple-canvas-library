@@ -74,12 +74,21 @@ function generateDemoHTML(demoScript, metadata, fileName) {
         <p><small>Canvas will resize automatically if resize handling is enabled in the demo.</small></p>
       </div>`;
 
+  // Load demo order from config
+  const config = loadDemoConfig();
+  const demoOrder = config.demoOrder.map(d => d.file);
+  const currentIndex = demoOrder.indexOf(fileName);
+  const prevDemo = currentIndex > 0 ? demoOrder[currentIndex - 1] : null;
+  const nextDemo = currentIndex < demoOrder.length - 1 ? demoOrder[currentIndex + 1] : null;
+
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>SimpleCanvasLibrary: ${metadata.title}</title>
     <base href="./">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -178,9 +187,34 @@ function generateDemoHTML(demoScript, metadata, fileName) {
       .nav-link:hover {
         text-decoration: underline;
       }
+      .demo-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 32px 0 0 0;
+        gap: 16px;
+      }
+      .demo-nav-btn {
+        background: #e3f2fd;
+        color: #1976d2;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 24px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      .demo-nav-btn:hover {
+        background: #bbdefb;
+      }
       @media (max-width: 768px) {
         .demo-container {
           grid-template-columns: 1fr;
+        }
+        .demo-nav {
+          flex-direction: column;
         }
       }
 
@@ -238,7 +272,10 @@ function generateDemoHTML(demoScript, metadata, fileName) {
       <a href="index.html" class="nav-link">← All Demos</a>
       <a href="../docs/index.html" class="nav-link">📖 API Docs</a>
     </div>
-
+    <nav class="demo-nav">
+      ${prevDemo ? `<a class="demo-nav-btn" href="${prevDemo}.html">← Previous</a>` : '<span></span>'}      
+      ${nextDemo ? `<a class="demo-nav-btn" href="${nextDemo}.html">Next →</a>` : '<span></span>'}
+    </nav>
     <div class="header">
       <h1>${metadata.title}</h1>
       <p>${metadata.description}</p>
@@ -248,17 +285,19 @@ function generateDemoHTML(demoScript, metadata, fileName) {
       </div>
       ` : ''}
     </div>
-
+    
     <div class="demo-container">
       ${demoContainerHTML}
 
       <div class="code-section">
         <div class="code-header">Source Code</div>
         <div class="code-content">
-          <pre><code>${escapeHtml(transformedScript)}</code></pre>
+          <pre><code class="language-js">${escapeHtml(transformedScript)}</code></pre>
         </div>
       </div>
     </div>
+
+    
 
     <script type="module">
       ${transformedScript}
@@ -296,6 +335,7 @@ function generateDemoHTML(demoScript, metadata, fileName) {
         });
       }
     </script>
+    <script>hljs.highlightAll();</script>
   </body>
 </html>`;
 }
@@ -336,13 +376,17 @@ function generateIndexHTML(demos, config) {
     return demo;
   }));
 
-  // Group demos by category
-  const groupedDemos = {
-    featured: orderedDemos.filter(demo => demo.config.featured),
-    debugging: orderedDemos.filter(demo => demo.config.category === 'debugging'),
-    distribution: orderedDemos.filter(demo => demo.config.category === 'distribution'),
-    all: orderedDemos
-  };
+  // Group demos by all categories in config
+  const groupedDemos = {};
+  Object.keys(categories).forEach(catKey => {
+    if (catKey === 'featured') {
+      groupedDemos[catKey] = orderedDemos.filter(demo => demo.config.featured);
+    } else if (catKey === 'all') {
+      groupedDemos[catKey] = orderedDemos;
+    } else {
+      groupedDemos[catKey] = orderedDemos.filter(demo => demo.config.category === catKey);
+    }
+  });
 
   function renderDemoCard(demo) {
     return `
@@ -362,6 +406,10 @@ function generateIndexHTML(demos, config) {
     if (!demos.length) return '';
 
     const category = categories[categoryKey];
+    if (!category) {
+      console.log('Cannot find category for key:', categoryKey);
+      return '';
+    }
     return `
       <div class="demo-section">
         <div class="section-header">
@@ -520,27 +568,23 @@ function generateIndexHTML(demos, config) {
     </div>
 
     <div class="category-nav">
-      <a href="#featured" class="category-nav-link">⭐ Featured</a>
-      <a href="#all" class="category-nav-link">📁 All Demos</a>
-      ${groupedDemos.debugging.length ? '<a href="#debugging" class="category-nav-link">🔧 Dev Tools</a>' : ''}
-      ${groupedDemos.distribution.length ? '<a href="#distribution" class="category-nav-link">📦 Distribution</a>' : ''}
+      ${Object.keys(categories).map(catKey => {
+    const cat = categories[catKey];
+    // Use emoji or icon if present in title, else default
+    let label = cat.title;
+    if (catKey === 'featured') label = '⭐ Featured';
+    else if (catKey === 'all') label = '� All Demos';
+    return groupedDemos[catKey] && groupedDemos[catKey].length
+      ? `<a href="#${catKey}" class="category-nav-link">${label}</a>`
+      : '';
+  }).join('')}
     </div>
 
-    <div id="featured">
-      ${renderDemoSection('featured', groupedDemos.featured)}
-    </div>
-
-    <div id="debugging">
-      ${renderDemoSection('debugging', groupedDemos.debugging)}
-    </div>
-
-    <div id="distribution">
-      ${renderDemoSection('distribution', groupedDemos.distribution)}
-    </div>
-
-    <div id="all">
-      ${renderDemoSection('all', groupedDemos.all)}
-    </div>
+    ${Object.keys(categories).map(catKey => (
+    `<div id="${catKey}">
+        ${renderDemoSection(catKey, groupedDemos[catKey])}
+      </div>`
+  )).join('')}
 
     <script>
       // Smooth scrolling for category navigation

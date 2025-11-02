@@ -16,20 +16,31 @@
   },
   "demoOrder": [
     {
-      "file": "gravity",
+      "file": "simple-drawing",
+      "featured": true,
+      "priority": 0
+    },
+    {
+      "file": "simple-moving-steps",
       "featured": true,
       "priority": 1
     },
     {
-      "file": "advanced-cat-sprite",
+      "file": "simple-moving-drawing",
       "featured": true,
       "priority": 2
     },
     {
-      "file": "basic-animation",
+      "file": "gravity",
       "featured": true,
       "priority": 3
     },
+    {
+      "file": "advanced-cat-sprite",
+      "featured": true,
+      "priority": 4
+    },
+
     {
       "file": "simple-click-handler",
       "featured": true,
@@ -55,11 +66,6 @@
       "file": "spritesheet-inspector",
       "category": "debugging",
       "priority": 9
-    },
-    {
-      "file": "umd-build",
-      "category": "distribution",
-      "priority": 10
     }
   ],
   "categories": {
@@ -67,13 +73,25 @@
       "title": "Featured Demos",
       "description": "Start here - these demos showcase the core features"
     },
-    "debugging": {
-      "title": "Development Tools",
+    "drawing": {
+      "title": "Drawing Examples",
       "description": "Utilities for debugging and development"
     },
-    "distribution": {
-      "title": "Distribution & Integration",
+    "animation": {
+      "title": "Animation Examples",
       "description": "Examples of using the library in different environments"
+    },
+    "events": {
+      "title": "Event Handling Examples",
+      "description": "Demos showcasing mouse and keyboard event handling"
+    },
+    "sprites": {
+      "title": "Sprite Handling Examples",
+      "description": "Demos focused on sprite animations and spritesheet usage"
+    },
+    "ui": {
+      "title": "GameInterface Examples",
+      "description": "Demos showing how to use the GameInterface class to add a UI layer with buttons etc"
     },
     "all": {
       "title": "All Demos",
