@@ -1,18 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { demoConfig, categories, tagDescriptions } from './demo-config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Load demo configuration
-function loadDemoConfig() {
-  const configPath = path.join(__dirname, 'demo-config.json');
-  if (!fs.existsSync(configPath)) {
-    throw new Error('demo-config.json not found. Please create this file to configure demo organization.');
-  }
-  return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-}
 
 // Parse demo metadata from JS file comments
 function parseDemoMetadata(content) {
@@ -74,9 +66,15 @@ function generateDemoHTML(demoScript, metadata, fileName) {
         <p><small>Canvas will resize automatically if resize handling is enabled in the demo.</small></p>
       </div>`;
 
-  // Load demo order from config
-  const config = loadDemoConfig();
-  const demoOrder = config.demoOrder.map(d => d.file);
+  // Build demo order from categories
+  const demoOrder = [];
+  for (const category of categories) {
+    for (const demo of category.demos) {
+      if (!demoOrder.includes(demo)) {
+        demoOrder.push(demo);
+      }
+    }
+  }
   const currentIndex = demoOrder.indexOf(fileName);
   const prevDemo = currentIndex > 0 ? demoOrder[currentIndex - 1] : null;
   const nextDemo = currentIndex < demoOrder.length - 1 ? demoOrder[currentIndex + 1] : null;
@@ -171,6 +169,12 @@ function generateDemoHTML(demoScript, metadata, fileName) {
         border-radius: 12px;
         font-size: 12px;
         font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s;
+      }
+      .tag:hover {
+        background: #bbdefb;
       }
       .navigation {
         background: white;
@@ -281,7 +285,7 @@ function generateDemoHTML(demoScript, metadata, fileName) {
       <p>${metadata.description}</p>
       ${metadata.tags.length > 0 ? `
       <div class="tags">
-        ${metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+        ${metadata.tags.map(tag => `<a href="index.html#tag-${tag}" class="tag">${tag}</a>`).join('')}
       </div>
       ` : ''}
     </div>
@@ -353,40 +357,44 @@ function escapeHtml(text) {
 }
 
 // Generate index page with all demos
-function generateIndexHTML(demos, config) {
-  const { demoConfig, categories, demoOrder } = config;
-
-  // Sort demos according to configuration
-  const orderedDemos = [];
+function generateIndexHTML(demos) {
+  // Create demo map for easy lookup
   const demoMap = new Map(demos.map(demo => [demo.fileName, demo]));
 
-  // Add demos in the order specified in config
-  for (const configDemo of demoOrder) {
-    const demo = demoMap.get(configDemo.file);
-    if (demo) {
-      demo.config = configDemo; // Add config info to demo
-      orderedDemos.push(demo);
-      demoMap.delete(configDemo.file);
+  // Build grouped demos based on categories
+  const groupedDemos = [];
+  for (const category of categories) {
+    const categoryDemos = [];
+    if (category.demos.length === 0) {
+      // "All Demos" category - add all demos
+      categoryDemos.push(...demos);
+    } else {
+      // Add demos in the order specified
+      for (const demoFileName of category.demos) {
+        const demo = demoMap.get(demoFileName);
+        if (demo) {
+          categoryDemos.push(demo);
+        }
+      }
     }
+    groupedDemos.push({
+      name: category.name,
+      description: category.description,
+      demos: categoryDemos
+    });
   }
 
-  // Add any remaining demos not in config
-  orderedDemos.push(...Array.from(demoMap.values()).map(demo => {
-    demo.config = { priority: 999 }; // Default low priority
-    return demo;
-  }));
-
-  // Group demos by all categories in config
-  const groupedDemos = {};
-  Object.keys(categories).forEach(catKey => {
-    if (catKey === 'featured') {
-      groupedDemos[catKey] = orderedDemos.filter(demo => demo.config.featured);
-    } else if (catKey === 'all') {
-      groupedDemos[catKey] = orderedDemos;
-    } else {
-      groupedDemos[catKey] = orderedDemos.filter(demo => demo.config.category === catKey);
+  // Collect all tags from demos
+  const tagMap = new Map();
+  for (const demo of demos) {
+    for (const tag of demo.metadata.tags) {
+      if (!tagMap.has(tag)) {
+        tagMap.set(tag, []);
+      }
+      tagMap.get(tag).push(demo);
     }
-  });
+  }
+  const sortedTags = Array.from(tagMap.keys()).sort();
 
   function renderDemoCard(demo) {
     return `
@@ -396,30 +404,43 @@ function generateIndexHTML(demos, config) {
           <a href="${demo.fileName}.html" class="demo-link">View Demo</a>
           ${demo.metadata.tags.length > 0 ? `
           <div class="tags">
-            ${demo.metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+            ${demo.metadata.tags.map(tag => `<a href="#tag-${tag}" class="tag">${tag}</a>`).join('')}
           </div>
           ` : ''}
         </div>`;
   }
 
-  function renderDemoSection(categoryKey, demos) {
-    if (!demos.length) return '';
+  function renderDemoSection(category) {
+    if (!category.demos.length) return '';
 
-    const category = categories[categoryKey];
-    if (!category) {
-      console.log('Cannot find category for key:', categoryKey);
-      return '';
-    }
     return `
-      <div class="demo-section">
+      <div class="demo-section" id="${slugify(category.name)}">
         <div class="section-header">
-          <h2>${category.title}</h2>
+          <h2>${category.name}</h2>
           <p>${category.description}</p>
+        </div>
+        <div class="demo-grid">
+          ${category.demos.map(renderDemoCard).join('')}
+        </div>
+      </div>`;
+  }
+
+  function renderTagSection(tag, demos) {
+    const description = tagDescriptions[tag] || `Demos tagged with "${tag}"`;
+    return `
+      <div class="demo-section" id="tag-${tag}">
+        <div class="section-header">
+          <h2>#${tag}</h2>
+          <p>${description}</p>
         </div>
         <div class="demo-grid">
           ${demos.map(renderDemoCard).join('')}
         </div>
       </div>`;
+  }
+
+  function slugify(text) {
+    return text.toLowerCase().replace(/\s+/g, '-');
   }
 
   return `<!DOCTYPE html>
@@ -510,6 +531,12 @@ function generateIndexHTML(demos, config) {
         border-radius: 12px;
         font-size: 11px;
         font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s;
+      }
+      .tag:hover {
+        background: #bbdefb;
       }
       .navigation {
         background: white;
@@ -529,28 +556,61 @@ function generateIndexHTML(demos, config) {
         text-decoration: underline;
       }
       
-      /* Category navigation */
+      /* Category and tag navigation */
       .category-nav {
         background: white;
         padding: 15px 20px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin-bottom: 20px;
-        text-align: center;
       }
-      .category-nav-link {
+      .nav-section {
+        margin-bottom: 15px;
+      }
+      .nav-section:last-child {
+        margin-bottom: 0;
+      }
+      .nav-section-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+      }
+      .category-nav-link, .tag-nav-link {
         display: inline-block;
         color: #666;
         text-decoration: none;
-        margin: 0 10px;
         padding: 5px 12px;
         border-radius: 15px;
         transition: all 0.2s;
         font-size: 14px;
       }
-      .category-nav-link:hover {
+      .category-nav-link {
         background: #f0f0f0;
+      }
+      .category-nav-link:hover {
+        background: #e0e0e0;
         color: #333;
+      }
+      .tag-nav-link {
+        background: #e3f2fd;
+        color: #1976d2;
+        font-size: 12px;
+      }
+      .tag-nav-link:hover {
+        background: #bbdefb;
+      }
+      .tag-nav-link::before {
+        content: '#';
+        opacity: 0.7;
       }
     </style>
   </head>
@@ -568,23 +628,36 @@ function generateIndexHTML(demos, config) {
     </div>
 
     <div class="category-nav">
-      ${Object.keys(categories).map(catKey => {
-    const cat = categories[catKey];
-    // Use emoji or icon if present in title, else default
-    let label = cat.title;
-    if (catKey === 'featured') label = '⭐ Featured';
-    else if (catKey === 'all') label = '� All Demos';
-    return groupedDemos[catKey] && groupedDemos[catKey].length
-      ? `<a href="#${catKey}" class="category-nav-link">${label}</a>`
-      : '';
-  }).join('')}
+      <div class="nav-section">
+        <div class="nav-section-title">Categories</div>
+        <div class="nav-links">
+          ${groupedDemos.map(category =>
+    `<a href="#${slugify(category.name)}" class="category-nav-link">${category.name}</a>`
+  ).join('')}
+        </div>
+      </div>
+      ${sortedTags.length > 0 ? `
+      <div class="nav-section">
+        <div class="nav-section-title">Browse by Tag</div>
+        <div class="nav-links">
+          ${sortedTags.map(tag =>
+    `<a href="#tag-${tag}" class="tag-nav-link">${tag}</a>`
+  ).join('')}
+        </div>
+      </div>
+      ` : ''}
     </div>
 
-    ${Object.keys(categories).map(catKey => (
-    `<div id="${catKey}">
-        ${renderDemoSection(catKey, groupedDemos[catKey])}
-      </div>`
-  )).join('')}
+    ${groupedDemos.map(category => renderDemoSection(category)).join('')}
+
+    <div class="demo-section" style="margin-top: 60px;">
+      <div class="section-header">
+        <h2>Browse by Tag</h2>
+        <p>Find demos by their specific features and topics</p>
+      </div>
+    </div>
+
+    ${sortedTags.map(tag => renderTagSection(tag, tagMap.get(tag))).join('')}
 
     <script>
       // Smooth scrolling for category navigation
@@ -606,9 +679,6 @@ function generateIndexHTML(demos, config) {
 async function generateDemos() {
   const demoScriptsDir = path.join(__dirname, 'demo-scripts');
   const demosDir = path.join(__dirname, 'demos');
-
-  // Load configuration
-  const config = loadDemoConfig();
 
   // Ensure demos directory exists
   if (!fs.existsSync(demosDir)) {
@@ -637,14 +707,14 @@ async function generateDemos() {
     console.log(`Generated ${fileName}.html`);
   }
 
-  // Generate index page with configuration
-  const indexHTML = generateIndexHTML(demos, config);
+  // Generate index page
+  const indexHTML = generateIndexHTML(demos);
   const indexPath = path.join(demosDir, 'index.html');
   fs.writeFileSync(indexPath, indexHTML);
 
   console.log('Generated demos/index.html');
   console.log(`Generated ${demos.length} demo files`);
-  console.log('Demo organization controlled by demo-config.json');
+  console.log('Demo organization controlled by demo-config.js');
 }
 
 // Run if called directly

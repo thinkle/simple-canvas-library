@@ -172,6 +172,7 @@ export class GameInterface extends GameCanvas {
         --canvas-container-background: #232326;
         --canvas-background: #18181b;
         --bar-background: #232326;
+        --bar-text-color: #e6e6e6;
         --bar-border-color: #333;
         --button-background: #232326;
         --button-hover-background: #333;
