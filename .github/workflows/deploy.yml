@@ -58,8 +58,10 @@ jobs:
 
           # Copy README as the main landing page content
           cp README.md site/
-
-          cp -r dist site/
+          # Copy over dist (code)
+          cp -r dist site/ 
+          # Copy over assets used in demos if any
+          cp -r assets site/
 
           # Create an index.html that shows the README content
           cat > site/index.html << 'EOF'
