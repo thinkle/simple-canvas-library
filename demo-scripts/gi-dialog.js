@@ -1,7 +1,7 @@
 /**
- * @demo GameInterface Dialog
- * @description Demonstrates the GameInterface class with Dialogs
- * @tags ui, interface, dialog
+ * @demo GameInterface with Dialog
+ * @description Shows how to create a dialog box using the GameInterface class.
+ * @tags game-interface, dialog, interactive
  */
 
 import { GameInterface } from "../src/index.ts";

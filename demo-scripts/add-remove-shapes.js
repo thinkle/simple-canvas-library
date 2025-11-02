@@ -1,7 +1,7 @@
 /**
- * @demo Add and Remove Shapes (UI Builder Version)
- * @description Interactive demo using GameInterface for shape management. Add shapes with a button, animate them, and remove shapes with another button.
- * @tags ui, interface, buttons, animation, shapes
+ * @demo Add and Remove Shapes
+ * @description Interactive demo showing how to dynamically add and remove shapes using GameInterface buttons.
+ * @tags game-interface, buttons, interactive, animation, shapes
  */
 
 import { GameInterface } from "../src/index.ts";

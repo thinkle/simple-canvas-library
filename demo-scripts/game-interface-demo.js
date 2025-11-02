@@ -1,7 +1,7 @@
 /**
- * @demo GameInterface Example
- * @description Demonstrates the new GameInterface class with UI components, game state management, and responsive canvas.
- * @tags ui, interface, buttons, inputs, sliders, game-interface
+ * @demo GameInterface Complete Example
+ * @description Comprehensive demo showing all GameInterface features: buttons, sliders, and number inputs.
+ * @tags game-interface, buttons, inputs, sliders, interactive
  */
 
 import { GameInterface } from "../src/index.ts";

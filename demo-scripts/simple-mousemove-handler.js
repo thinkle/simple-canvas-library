@@ -1,7 +1,7 @@
 /**
- * @demo Mouse Move Handler
- * @description Demonstrates basic mouse move event handling and drawing on the canvas.
- * @tags interaction, mouse, events
+ * @demo Simple Mouse Move Handler
+ * @description Shows how to handle mouse movement events with GameCanvas.
+ * @tags interactive, mouse, events
  */
 import { GameCanvas } from "../src";
 

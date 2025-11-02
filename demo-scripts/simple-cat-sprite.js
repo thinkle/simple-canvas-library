@@ -1,7 +1,7 @@
 /**
- * @demo Simple Cat Sprite
- * @description Basic sprite animation cycling through all 31 frames in the cat spritesheet.
- * @tags sprites, animation, basic, frames
+ * @demo Simple Cat Sprite (Static Position)
+ * @description Basic sprite animation example using a cat spritesheet with stationary display.
+ * @tags sprites, animation, basics, spritesheet
  */
 
 import { GameCanvas, Sprite } from "../src/index.ts";

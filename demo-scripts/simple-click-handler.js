@@ -1,7 +1,7 @@
 /**
  * @demo Simple Click Handler
- * @description Demonstrates basic click event handling and drawing on the canvas.
- * @tags interaction, click, events
+ * @description Shows how to handle click events with GameCanvas.
+ * @tags interactive, click, events, basics
  */
 
 import { GameCanvas } from "../src";

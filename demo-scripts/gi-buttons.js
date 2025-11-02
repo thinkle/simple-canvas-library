@@ -1,7 +1,7 @@
 /**
- * @demo GameInterface Buttons
- * @description Demonstrates the GameInterface class with Buttons
- * @tags ui, interface, buttons
+ * @demo GameInterface with Buttons
+ * @description Shows how to create interactive buttons using the GameInterface class.
+ * @tags game-interface, buttons, interactive
  */
 
 import { GameInterface } from "../src/index.ts";

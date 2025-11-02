@@ -1,7 +1,7 @@
 /**
  * @demo Simple Animation Using Elapsed Time
  * @description Shows how to update a drawing over time using total elapsed time.
- * @tags drawing, animation, elapsed-time
+ * @tags drawing, animation, timing
  */
 import { GameCanvas } from "../src";
 

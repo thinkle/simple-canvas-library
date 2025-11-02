@@ -1,7 +1,7 @@
 /**
  * @demo Simple Drawing Example
  * @description Shows how to create a drawing using the GameCanvas class.
- * @tags drawing, basics
+ * @tags drawing, basics, getting-started
  */
 import { GameCanvas } from "../src";
 

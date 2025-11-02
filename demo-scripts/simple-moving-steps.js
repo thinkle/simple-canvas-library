@@ -1,8 +1,8 @@
 /**
- * @demo Simple Animation Using stepTime
- * @description Shows how to update a drawing using stepTime to create consistent movement
- * between frames. stepTime is the time (in ms) since the last frame was drawn.
- * @tags drawing, animation, step-time
+ * @demo Simple Moving Drawing (Step Time)
+ * @description Shows how to animate drawings using step time for consistent frame-based movement.
+ * Compare this to elapsed-time for different animation approaches.
+ * @tags drawing, animation, timing
  */
 import { GameCanvas } from "../src";
 

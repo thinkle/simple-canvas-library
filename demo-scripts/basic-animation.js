@@ -1,7 +1,7 @@
 /**
- * @demo Basic Animation
- * @description Simple moving circle demonstrating the core drawing and animation loop functionality.
- * @tags animation, basic, getting-started
+ * @demo Basic Animation Example
+ * @description Demonstrates simple animation with moving shapes using GameCanvas.
+ * @tags animation, basics, getting-started
  */
 
 import { GameCanvas } from "../src/index.ts";
@@ -15,10 +15,10 @@ game.addDrawing(({ ctx, elapsed, width, height }) => {
   let centerx = width / 2;
   let centery = height / 2;
   let radius = height / 3;
-  
+
   // Clear canvas first
   ctx.clearRect(0, 0, width, height);
-  
+
   ctx.beginPath();
   ctx.moveTo(centerx, centery);
   ctx.lineTo(Math.cos(angle) * radius + centerx, Math.sin(angle) * radius + centery);

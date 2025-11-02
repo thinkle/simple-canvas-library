@@ -1,7 +1,7 @@
 /**
  * @demo Fancy Click Handler
- * @description Interactive demo showing click event handling with dynamic drawing creation, color cycling, and gravity effects.
- * @tags interaction, click, events, colors
+ * @description Advanced click handling with visual feedback and color changes.
+ * @tags interactive, click, events, advanced
  */
 
 import { GameCanvas } from "../src/index.ts";

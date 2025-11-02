@@ -1,8 +1,7 @@
 /**
- * @demo Gravity Example
- * @description Demonstrates using a simple object to create bouncing objects
- * with "gravity" effect
- * @tags ui, movement, physics
+ * @demo Gravity Simulation with UI Controls
+ * @description Interactive gravity simulation with UI controls for adjusting parameters.
+ * @tags game-interface, physics, interactive, animation
  */
 
 import { GameInterface } from "../src/index.ts";

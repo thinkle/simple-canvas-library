@@ -82,17 +82,41 @@ export const categories = [
  * Tags are automatically extracted from demo files
  */
 export const tagDescriptions = {
+  // Core concepts
   'basics': 'Fundamental concepts and getting started',
+  'getting-started': 'Perfect for beginners learning the library',
+  'advanced': 'Advanced techniques and patterns',
+
+  // Drawing and animation
   'drawing': 'Canvas drawing techniques',
   'animation': 'Animation and movement examples',
+  'timing': 'Time-based animation (elapsed time, step time)',
+
+  // Sprites
   'sprites': 'Working with sprite graphics',
   'spritesheet': 'Using sprite sheets for animation',
-  'mouse-following': 'Interactive mouse tracking',
-  'interactive': 'User interaction examples',
+  'frames': 'Frame-based sprite animation',
+
+  // Interaction
+  'interactive': 'User interaction and input handling',
   'events': 'Event handling (clicks, mouse movement, etc.)',
-  'ui': 'User interface components',
-  'advanced': 'Advanced techniques and patterns',
-  'game': 'Game development concepts',
-  'physics': 'Physics simulations',
+  'click': 'Click event handling',
+  'mouse': 'Mouse tracking and interaction',
+  'mouse-following': 'Interactive mouse tracking',
+
+  // UI and GameInterface
+  'game-interface': 'GameInterface class with UI controls',
+  'buttons': 'Interactive button components',
+  'sliders': 'Slider input controls',
+  'inputs': 'Number and text input fields',
+  'dialog': 'Dialog boxes and modals',
+  'shapes': 'Dynamic shape creation and manipulation',
+
+  // Other features
+  'physics': 'Physics simulations and effects',
+  'resize': 'Canvas resizing and responsive design',
+  'responsive': 'Responsive canvas behavior',
+  'orientation': 'Screen orientation handling',
   'debugging': 'Development and debugging tools',
+  'analysis': 'Analysis and inspection utilities',
 };
