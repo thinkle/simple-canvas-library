@@ -11,8 +11,14 @@ import { Size } from "./types";
 export interface GameInterfaceConfig {
   /** Size of the canvas area */
   canvasSize?: Size;
-  /** Whether to auto-resize the canvas */
+  /** Whether to auto-resize the canvas bitmap to match display size */
   autoresize?: boolean;
+  /**
+   * If true, canvas display scales to fit container while maintaining aspect ratio.
+   * Use with canvasSize to have fixed logical resolution with flexible display size.
+   * Example: canvasSize: {width: 800, height: 600}, scaleToFit: true
+   */
+  scaleToFit?: boolean;
   /** Container element to append to (defaults to document.body) */
   parent?: HTMLElement;
   /** CSS class for the main container */
@@ -90,18 +96,40 @@ export class GameInterface extends GameCanvas {
     // Create the canvas element first
     const canvas = document.createElement("canvas");
 
-    // Determine sizing behavior:
-    // - If no canvasSize: fill container (flex), autoresize ON
-    // - If canvasSize + autoresize explicitly true: allow resize, but container still sized to canvas initially
-    // - If canvasSize + no autoresize/false: fixed size
+    // Handle contradictory configuration
     const hasExplicitSize = !!config.canvasSize;
-    const shouldAutoresize = config.autoresize ?? !hasExplicitSize;
+    const explicitAutoresize = config.autoresize !== undefined;
+    const useScaleToFit = !!(config.scaleToFit && hasExplicitSize);
 
-    // Set initial canvas size ONLY if we have an explicit size or autoresize is false
-    // If autoresize is true and no explicit size, let CSS and ResizeObserver handle it
-    if (!shouldAutoresize || hasExplicitSize) {
-      canvas.width = config.canvasSize?.width || 400;
-      canvas.height = config.canvasSize?.height || 300;
+    if (hasExplicitSize && explicitAutoresize && config.autoresize) {
+      console.warn(
+        "GameInterface: Both canvasSize and autoresize:true were specified. " +
+          "This is contradictory - autoresize will be ignored and canvas will use the specified size. " +
+          "Did you mean to use scaleToFit:true instead?"
+      );
+    }
+
+    if (config.scaleToFit && !hasExplicitSize) {
+      console.warn(
+        "GameInterface: scaleToFit requires canvasSize to be specified. " +
+          "Falling back to autoresize mode."
+      );
+    }
+
+    // Determine sizing behavior:
+    // - If scaleToFit + explicit size: fixed logical size, CSS scales display
+    // - If explicit size only: fixed size, no scaling
+    // - If no size: default to autoresize (bitmap matches display)
+    const shouldAutoresize = useScaleToFit
+      ? false
+      : hasExplicitSize
+      ? false
+      : config.autoresize ?? true;
+
+    // Set initial canvas size if we have an explicit size or scaleToFit
+    if (hasExplicitSize) {
+      canvas.width = config.canvasSize!.width;
+      canvas.height = config.canvasSize!.height;
     }
 
     // Call parent constructor with the canvas element
@@ -111,19 +139,61 @@ export class GameInterface extends GameCanvas {
     });
 
     this.config = config;
-    this.setupContainer(canvas, hasExplicitSize, shouldAutoresize);
+    this.setupContainer(
+      canvas,
+      hasExplicitSize,
+      shouldAutoresize,
+      useScaleToFit
+    );
   }
 
   private setupContainer(
     canvas: HTMLCanvasElement,
     hasExplicitSize: boolean,
-    shouldAutoresize: boolean
+    shouldAutoresize: boolean,
+    useScaleToFit: boolean
   ) {
     // Create main container
     this.container = document.createElement("div");
 
-    if (this.config.fullscreen) {
-      // Fullscreen mode: fill viewport, no scroll
+    // CSS variables - defined once for all modes
+    const cssVars = `
+      --container-background: #18181b;
+      --container-border-color: #222;
+      --canvas-container-background: #232326;
+      --canvas-background: #18181b;
+      --bar-background: #232326;
+      --bar-text-color: #e6e6e6;
+      --bar-border-color: #333;
+      --button-background: #232326;
+      --button-hover-background: #333;
+      --button-border-color: #333;
+      --button-text-color: #e6e6e6;
+      --input-background: #232326;
+      --input-border-color: #333;
+      --input-text-color: #e6e6e6;
+      --input-container-background: transparent;
+      --label-color: #e6e6e6;
+      --dialog-background: #232326;
+      --dialog-title-color: #e6e6e6;
+      --dialog-message-color: #b3b3b3;
+      --close-button-background: #22c55e;
+      --close-button-color: #18181b;
+      --scl-font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --scl-font-size: 14px;
+      --scl-color-text: #e6e6e6;
+      --scl-color-muted: #9ca3af;
+      --scl-color-accent: #22c55e;
+      --scl-input-bg: transparent;
+      --scl-input-track-bg: #444;
+      --scl-input-thumb-bg: #22c55e;
+      --scl-input-thumb-border: #18181b;
+    `;
+
+    if (this.config.containerClass) {
+      this.container.className = this.config.containerClass;
+    } else if (this.config.fullscreen) {
+      // Fullscreen mode: fill viewport
       this.container.style.cssText = `
         position: fixed;
         inset: 0;
@@ -133,177 +203,93 @@ export class GameInterface extends GameCanvas {
         border: none;
         border-radius: 0;
         overflow: hidden;
-        background: var(--container-background, #18181b);
+        background: var(--container-background);
         width: 100vw;
         height: 100vh;
         margin: 0;
-        /* Dark mode CSS variable defaults */
-        --container-background: #18181b;
-        --container-border-color: #222;
-        --canvas-container-background: #232326;
-        --canvas-background: #18181b;
-        --bar-background: #232326;
-        --bar-text-color: #e6e6e6;
-        --bar-border-color: #333;
-        --button-background: #232326;
-        --button-hover-background: #333;
-        --button-border-color: #333;
-        --button-text-color: #e6e6e6;
-        --input-background: #232326;
-        --input-border-color: #333;
-        --input-text-color: #e6e6e6;
-        --input-container-background: transparent;
-        --label-color: #e6e6e6;
-        --dialog-background: #232326;
-        --dialog-title-color: #e6e6e6;
-        --dialog-message-color: #b3b3b3;
-        --close-button-background: #22c55e;
-        --close-button-color: #18181b;
-        /* Slider specific */
-        --scl-font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-        --scl-font-size: 14px;
-        --scl-color-text: #e6e6e6;
-        --scl-color-muted: #9ca3af;
-        --scl-color-accent: #22c55e;
-        --scl-input-bg: transparent;
-        --scl-input-track-bg: #444;
-        --scl-input-thumb-bg: #22c55e;
-        --scl-input-thumb-border: #18181b;
+        ${cssVars}
       `;
       document.body.style.overflow = "hidden";
-    } else if (this.config.containerClass) {
-      this.container.className = this.config.containerClass;
     } else {
-      // Sizing behavior:
-      // - When no explicit size + autoresize: use flex layout to fill parent, container grows with content
-      // - When explicit size: use inline-flex to size to content (canvas + bars)
-      const isFlexible = !hasExplicitSize && shouldAutoresize;
-      const displayMode = isFlexible ? "flex" : "inline-flex";
-      const sizing = isFlexible ? "width: 100%; height: 100%;" : "";
-      const maxConstraints = hasExplicitSize
-        ? `max-width: min(100vw, ${this.config.canvasSize!.width + 22}px);
-           max-height: min(100vh, ${this.config.canvasSize!.height + 100}px);`
-        : "";
+      // Normal mode: flexible or fixed size
+      // Only fill container if autoresize without explicit size
+      // scaleToFit should size to content (inline-flex) so UI respects canvas size
+      const shouldFillContainer = !hasExplicitSize && shouldAutoresize;
 
       this.container.style.cssText = `
-        display: ${displayMode};
+        display: ${shouldFillContainer ? "flex" : "inline-flex"};
         flex-direction: column;
-        border: 1px solid var(--container-border-color, #222);
+        border: 1px solid var(--container-border-color);
         border-radius: 4px;
         overflow: hidden;
-        background: var(--container-background, #18181b);
+        background: var(--container-background);
         margin: 0 auto;
-        ${sizing}
-        ${maxConstraints}
         box-sizing: border-box;
-        /* Dark mode CSS variable defaults */
-        --container-background: #18181b;
-        --container-border-color: #222;
-        --canvas-container-background: #232326;
-        --canvas-background: #18181b;
-        --bar-background: #232326;
-        --bar-text-color: #e6e6e6;
-        --bar-border-color: #333;
-        --button-background: #232326;
-        --button-hover-background: #333;
-        --button-border-color: #333;
-        --button-text-color: #e6e6e6;
-        --input-background: #232326;
-        --input-border-color: #333;
-        --input-text-color: #e6e6e6;
-        --input-container-background: transparent;
-        --label-color: #e6e6e6;
-        --dialog-background: #232326;
-        --dialog-title-color: #e6e6e6;
-        --dialog-message-color: #b3b3b3;
-        --close-button-background: #22c55e;
-        --close-button-color: #18181b;
-        /* Slider specific */
-        --scl-font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-        --scl-font-size: 14px;
-        --scl-color-text: #e6e6e6;
-        --scl-color-muted: #9ca3af;
-        --scl-color-accent: #22c55e;
-        --scl-input-bg: transparent;
-        --scl-input-track-bg: #444;
-        --scl-input-thumb-bg: #22c55e;
-        --scl-input-thumb-border: #18181b;
+        ${shouldFillContainer ? "width: 100%; height: 100%;" : ""}
+        ${cssVars}
       `;
     }
 
-    // Inject CSS variables as inline styles on the container (overrides)
+    // User CSS variable overrides
     if (this.config.cssVars) {
       for (const [k, v] of Object.entries(this.config.cssVars)) {
         this.container.style.setProperty(k, v);
       }
     }
 
-    // Create canvas container with responsive sizing
+    // Create canvas container
     this.canvasContainer = document.createElement("div");
-    if (this.config.fullscreen) {
-      this.canvasContainer.style.cssText = `
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: var(--canvas-container-background, #232326);
-        min-height: 0;
-        padding: 0;
-        box-sizing: border-box;
 
-      `;
-      canvas.style.cssText = `
-        width: 100vw;
-        max-width: 100vw;
-        max-height: 100vh;
-        height: 100%;
-        border: none;
-        border-radius: 0;
-        background: var(--canvas-background, transparent);
-        display: block;
-      `;
-    } else {
-      // Non-fullscreen: canvas container wraps the canvas
-      // When autoresize is enabled, canvas fills its container
-      // When not, canvas uses its explicit dimensions
-      if (shouldAutoresize) {
-        // Autoresize mode: canvas fills container
-        this.canvasContainer.style.cssText = `
-          flex: 1;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          background: var(--canvas-container-background, #fafafa);
-          padding: 10px;
-          box-sizing: border-box;
-          min-height: 0;
-        `;
-        canvas.style.cssText = `
-          width: 100%;
-          height: 100%;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          background: var(--canvas-background, transparent);
-          display: block;
-        `;
-      } else {
-        // Fixed size mode: canvas uses explicit dimensions
-        this.canvasContainer.style.cssText = `
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          background: var(--canvas-container-background, #fafafa);
-          padding: 10px;
-          box-sizing: border-box;
-        `;
-        canvas.style.cssText = `
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          background: var(--canvas-background, transparent);
-          display: block;
-        `;
-      }
+    // Determine layout CSS based on mode
+    const isFullscreen = this.config.fullscreen;
+    
+    // Canvas container needs flex when:
+    // - fullscreen (fills viewport)
+    // - autoresize without explicit size (fills parent)
+    // - scaleToFit (needs to provide space for canvas to scale within)
+    let containerLayoutCss = "";
+    if (isFullscreen || shouldAutoresize || useScaleToFit) {
+      containerLayoutCss = "flex: 1; min-height: 0;";
     }
+    
+    let canvasLayoutCss = "";
+    if (useScaleToFit) {
+      // scaleToFit mode: fixed logical size, scales to fit with aspect ratio preserved
+      const aspectRatio = this.config.canvasSize!.width / this.config.canvasSize!.height;
+      canvasLayoutCss = `
+        max-width: 100%;
+        max-height: 100%;
+        aspect-ratio: ${aspectRatio};
+        object-fit: contain;
+      `;
+    } else if (isFullscreen || shouldAutoresize) {
+      // Flexible modes: fill container
+      canvasLayoutCss = `
+        width: 100%;
+        height: 100%;
+        ${isFullscreen ? "max-width: 100vw; max-height: 100vh;" : ""}
+      `;
+    }
+
+    // Canvas container styling (common styles + layout)
+    this.canvasContainer.style.cssText = `
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--canvas-container-background);
+      padding: ${isFullscreen ? "0" : "10px"};
+      box-sizing: border-box;
+      ${containerLayoutCss}
+    `;
+
+    // Canvas styling (common styles + layout)
+    canvas.style.cssText = `
+      border: ${isFullscreen ? "none" : "1px solid #ddd"};
+      border-radius: ${isFullscreen ? "0" : "4px"};
+      background: var(--canvas-background);
+      display: block;
+      ${canvasLayoutCss}
+    `;
 
     // Add canvas to container
     this.canvasContainer.appendChild(canvas);
