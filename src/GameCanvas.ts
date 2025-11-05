@@ -246,8 +246,9 @@ export class GameCanvas {
 
     if (this.autoresize) {
       this.observeCanvasResize();
-      this.canvas.width = Math.min(this.canvas.clientWidth, this.width);
-      this.canvas.height = Math.min(this.canvas.clientHeight, this.height);
+      // When autoresize is enabled, set canvas size to match current client size
+      // This ensures CSS sizing is respected from the start
+      this.setCanvasSize(this.canvas.clientWidth, this.canvas.clientHeight);
     }
     this.isRunning = true;
     this.tick();

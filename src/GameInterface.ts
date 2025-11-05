@@ -89,20 +89,36 @@ export class GameInterface extends GameCanvas {
   constructor(config: GameInterfaceConfig = {}) {
     // Create the canvas element first
     const canvas = document.createElement("canvas");
-    canvas.width = config.canvasSize?.width || 400;
-    canvas.height = config.canvasSize?.height || 300;
+
+    // Determine sizing behavior:
+    // - If no canvasSize: fill container (flex), autoresize ON
+    // - If canvasSize + autoresize explicitly true: allow resize, but container still sized to canvas initially
+    // - If canvasSize + no autoresize/false: fixed size
+    const hasExplicitSize = !!config.canvasSize;
+    const shouldAutoresize = config.autoresize ?? !hasExplicitSize;
+
+    // Set initial canvas size ONLY if we have an explicit size or autoresize is false
+    // If autoresize is true and no explicit size, let CSS and ResizeObserver handle it
+    if (!shouldAutoresize || hasExplicitSize) {
+      canvas.width = config.canvasSize?.width || 400;
+      canvas.height = config.canvasSize?.height || 300;
+    }
 
     // Call parent constructor with the canvas element
     super(canvas, {
       size: config.canvasSize,
-      autoresize: config.autoresize,
+      autoresize: shouldAutoresize,
     });
 
     this.config = config;
-    this.setupContainer(canvas);
+    this.setupContainer(canvas, hasExplicitSize, shouldAutoresize);
   }
 
-  private setupContainer(canvas: HTMLCanvasElement) {
+  private setupContainer(
+    canvas: HTMLCanvasElement,
+    hasExplicitSize: boolean,
+    shouldAutoresize: boolean
+  ) {
     // Create main container
     this.container = document.createElement("div");
 
@@ -158,14 +174,28 @@ export class GameInterface extends GameCanvas {
     } else if (this.config.containerClass) {
       this.container.className = this.config.containerClass;
     } else {
+      // Sizing behavior:
+      // - When no explicit size + autoresize: use flex layout to fill parent, container grows with content
+      // - When explicit size: use inline-flex to size to content (canvas + bars)
+      const isFlexible = !hasExplicitSize && shouldAutoresize;
+      const displayMode = isFlexible ? "flex" : "inline-flex";
+      const sizing = isFlexible ? "width: 100%; height: 100%;" : "";
+      const maxConstraints = hasExplicitSize
+        ? `max-width: min(100vw, ${this.config.canvasSize!.width + 22}px);
+           max-height: min(100vh, ${this.config.canvasSize!.height + 100}px);`
+        : "";
+
       this.container.style.cssText = `
-        display: inline-flex;
+        display: ${displayMode};
         flex-direction: column;
         border: 1px solid var(--container-border-color, #222);
         border-radius: 4px;
         overflow: hidden;
         background: var(--container-background, #18181b);
         margin: 0 auto;
+        ${sizing}
+        ${maxConstraints}
+        box-sizing: border-box;
         /* Dark mode CSS variable defaults */
         --container-background: #18181b;
         --container-border-color: #222;
@@ -233,26 +263,46 @@ export class GameInterface extends GameCanvas {
         display: block;
       `;
     } else {
-      this.canvasContainer.style.cssText = `
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: var(--canvas-container-background, #fafafa);
-        min-height: 200px;
-        padding: 10px;
-        box-sizing: border-box;
-      `;
-      canvas.style.cssText = `=      
-        width: 100%;
-        height: 100%;
-        max-width: 100%;
-        max-height: 100%;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background: var(--canvas-background, transparent);
-        display: block;
-      `;
+      // Non-fullscreen: canvas container wraps the canvas
+      // When autoresize is enabled, canvas fills its container
+      // When not, canvas uses its explicit dimensions
+      if (shouldAutoresize) {
+        // Autoresize mode: canvas fills container
+        this.canvasContainer.style.cssText = `
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: var(--canvas-container-background, #fafafa);
+          padding: 10px;
+          box-sizing: border-box;
+          min-height: 0;
+        `;
+        canvas.style.cssText = `
+          width: 100%;
+          height: 100%;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          background: var(--canvas-background, transparent);
+          display: block;
+        `;
+      } else {
+        // Fixed size mode: canvas uses explicit dimensions
+        this.canvasContainer.style.cssText = `
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: var(--canvas-container-background, #fafafa);
+          padding: 10px;
+          box-sizing: border-box;
+        `;
+        canvas.style.cssText = `
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          background: var(--canvas-background, transparent);
+          display: block;
+        `;
+      }
     }
 
     // Add canvas to container
