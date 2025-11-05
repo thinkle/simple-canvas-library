@@ -242,28 +242,36 @@ export class GameInterface extends GameCanvas {
 
     // Determine layout CSS based on mode
     const isFullscreen = this.config.fullscreen;
-    
-    // Canvas container needs flex when:
-    // - fullscreen (fills viewport)
-    // - autoresize without explicit size (fills parent)
-    // - scaleToFit (needs to provide space for canvas to scale within)
+
+    // Canvas container layout CSS
     let containerLayoutCss = "";
-    if (isFullscreen || shouldAutoresize || useScaleToFit) {
-      containerLayoutCss = "flex: 1; min-height: 0;";
-    }
-    
     let canvasLayoutCss = "";
+
     if (useScaleToFit) {
-      // scaleToFit mode: fixed logical size, scales to fit with aspect ratio preserved
-      const aspectRatio = this.config.canvasSize!.width / this.config.canvasSize!.height;
-      canvasLayoutCss = `
-        max-width: 100%;
-        max-height: 100%;
+      // scaleToFit mode:
+      // Container becomes a CSS container that fills flex space
+      // Canvas sizes based on container query units with aspect-ratio
+      const aspectRatio =
+        this.config.canvasSize!.width / this.config.canvasSize!.height;
+
+      containerLayoutCss = `
+        flex: 1;
+        min-height: 0;
+        container-type: size;
         aspect-ratio: ${aspectRatio};
-        object-fit: contain;
+        max-width: ${this.config.canvasSize!.width}px;
+        max-height: ${this.config.canvasSize!.height}px;
+        height: min(calc(100vh - 128px), ${this.config.canvasSize!.height}px);
+      `;
+
+      // Canvas uses container query units to fill the container
+      canvasLayoutCss = `
+        width: 100cqw;
+        height: 100cqh;
       `;
     } else if (isFullscreen || shouldAutoresize) {
       // Flexible modes: fill container
+      containerLayoutCss = "flex: 1; min-height: 0;";
       canvasLayoutCss = `
         width: 100%;
         height: 100%;

@@ -32,6 +32,23 @@ export abstract class UIBar extends UIComponent {
   }
 
   /**
+   * Set alignment of items within the bar.
+   * @param justifyContent - Justify content value (CSS flexbox)
+   */
+  setAlignment(
+    justifyContent:
+      | "start"
+      | "center"
+      | "end"
+      | "space-between"
+      | "space-around"
+      | "space-evenly"
+  ): this {
+    this.element.style.setProperty("--bar-justify-content", justifyContent);
+    return this;
+  }
+
+  /**
    * Add a title (non-interactive text) to the bar.
    * Inherits bar foreground/background colors.
    * @param text - Title text
@@ -42,7 +59,7 @@ export abstract class UIBar extends UIComponent {
     title.textContent = text;
     title.style.cssText = `
       color: var(--bar-text-color, inherit);
-      background: var(--bar-background, inherit);
+      background: var(--bar-background, inherit);      
       font-weight: bold;
       font-size: 1.1em;
       margin-right: 16px;
@@ -142,6 +159,7 @@ export class TopBar extends UIBar {
       border-bottom: 1px solid var(--bar-border-color, #ddd);
       min-height: 40px;
       flex-wrap: wrap;
+      justify-content: var(--bar-justify-content, start);
     `;
     super(element);
   }
@@ -157,12 +175,13 @@ export class BottomBar extends UIBar {
     const element = document.createElement("div");
     element.style.cssText = `
       display: flex;
-      align-items: center;
+      align-items: center;      
       padding: 8px;
       background: var(--bar-background, #f8f8f8);
       border-top: 1px solid var(--bar-border-color, #ddd);
       min-height: 40px;
       flex-wrap: wrap;
+      justify-content: var(--bar-justify-content, start);
     `;
     super(element);
   }
