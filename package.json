@@ -1,6 +1,6 @@
 {
   "name": "simple-canvas-library",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A simple library for handling basic canvas drawings, callbacks, and animations.",
   "type": "module",
   "main": "dist/simple-canvas-library.umd.cjs",
