@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fixed Size Canvas</title>
+    <style>
+      body { margin: 0; background: #f0f0f0; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <canvas id="test-canvas"></canvas>
+    <script type="module">
+      import { GameCanvas } from "/src/index.ts";
+
+      const game = new GameCanvas("test-canvas", {
+        size: { width: 400, height: 300 },
+      });
+
+      game.addDrawing(({ ctx, width, height }) => {
+        // Fill background red
+        ctx.fillStyle = "red";
+        ctx.fillRect(0, 0, width, height);
+        // Draw green rectangle in top-left quadrant
+        ctx.fillStyle = "green";
+        ctx.fillRect(0, 0, width / 2, height / 2);
+        // Draw blue circle in center
+        ctx.beginPath();
+        ctx.fillStyle = "blue";
+        ctx.arc(width / 2, height / 2, 40, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      game.run();
+
+      // Expose game for testing
+      window.__game = game;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Scaled Canvas (CSS vs Pixel Size)</title>
+    <style>
+      body { margin: 20px; background: #f0f0f0; }
+      /* Canvas has 200x100 pixels but displayed at 400x200 via CSS */
+      #test-canvas {
+        display: block;
+        width: 400px;
+        height: 200px;
+        border: 2px solid black;
+        image-rendering: pixelated;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Scaled Canvas: 200×100 pixels displayed at 400×200 CSS</h3>
+    <!-- Fixed pixel size 200x100, CSS doubles it to 400x200 -->
+    <canvas id="test-canvas" width="200" height="100"></canvas>
+    <script type="module">
+      import { GameCanvas } from "/src/index.ts";
+
+      // Use the canvas with its HTML attribute dimensions (200x100)
+      // autoresize is false so it stays at 200x100 pixels
+      const game = new GameCanvas("test-canvas", {
+        size: { width: 200, height: 100 },
+      });
+
+      game.addDrawing(({ ctx, width, height }) => {
+        // Checkerboard pattern to show pixel grid
+        const cellSize = 10;
+        for (let row = 0; row < height / cellSize; row++) {
+          for (let col = 0; col < width / cellSize; col++) {
+            ctx.fillStyle = (row + col) % 2 === 0 ? "#333" : "#ccc";
+            ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+          }
+        }
+        // Center cross to verify center alignment
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(width / 2, 0);
+        ctx.lineTo(width / 2, height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+        // Draw size in pixels (bottom-right corner to avoid test sample areas)
+        ctx.fillStyle = "white";
+        ctx.font = "12px monospace";
+        ctx.textAlign = "right";
+        ctx.fillText(`${width}×${height}px`, width - 2, height - 4);
+        ctx.textAlign = "left";
+      });
+
+      game.run();
+
+      window.__game = game;
+    </script>
+  </body>
+</html>

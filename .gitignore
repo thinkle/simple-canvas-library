@@ -8,6 +8,10 @@ dist/
 # Generated demo files (these are built from demo-scripts/)
 demos/*.html
 
+# Test artifacts (results and screenshots are tracked; snapshots are generated)
+tests/test-results/
+tests/snapshots/
+
 # IDEs
 .vscode/
 .idea/
