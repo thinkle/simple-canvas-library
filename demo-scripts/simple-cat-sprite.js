@@ -36,7 +36,7 @@ game.addDrawing(function ({ ctx, width, height }) {
   ctx.font = '14px sans-serif';
   ctx.fillText('🐱 Simple Cat Sprite Animation', 15, 30);
   ctx.fillText('Cycling through all 31 frames slowly', 15, 48);
-  ctx.fillText(`Current frame: ${cat.frame}`, 15, 65);
+  ctx.fillText('Current frame: ' + cat.frame, 15, 65);
 });
 
 // Add the cat sprite to the game

@@ -11,40 +11,47 @@ const demoContainer = document.getElementById('demo-container');
 const gi = new GameInterface({
   canvasSize: { width: 400, height: 300 },
   autoresize: true,
-  parent: demoContainer || document.body // Fallback to body if container doesn't exist
+  parent: demoContainer || document.body
 });
 
-// Add a top bar with functional buttons
+// A list of colors to pick from at random
+const colors = ['red', 'green', 'blue', 'orange', 'purple', 'teal', 'salmon', 'navy'];
+
+// Add a top bar with a title
 const topBar = gi.addTopBar();
 topBar.addTitle("Button Demo");
+
+// Add a bottom bar with buttons
 const bottomBar = gi.addBottomBar();
+
 bottomBar.addButton({
   text: "Add a Rectangle",
-  onclick: () => {
-    const rectWidth = Math.random()
-    const rectHeight = Math.random()
-    const xperc = Math.random();
-    const yperc = Math.random();
-    const color = '#' + Math.floor(Math.random() * 16777215).toString(16);
-    gi.addDrawing(({ ctx, width, height }) => {
-      const x = xperc * width;
-      const y = yperc * height;
+  onclick: function () {
+    let rectWidth = Math.random();
+    let rectHeight = Math.random();
+    let xPercent = Math.random();
+    let yPercent = Math.random();
+    let color = colors[Math.floor(Math.random() * colors.length)];
+    gi.addDrawing(function ({ ctx, width, height }) {
+      let x = xPercent * width;
+      let y = yPercent * height;
       ctx.fillStyle = color;
       ctx.fillRect(x, y, rectWidth * width, rectHeight * height);
     });
   }
-})
+});
+
 bottomBar.addButton({
   text: 'Add a Circle',
-  onclick: () => {
-    const xperc = Math.random();
-    const yperc = Math.random();
-    const color = '#' + Math.floor(Math.random() * 16777215).toString(16);
-    const radius = Math.random() * 50;
-    gi.addDrawing(({ ctx, width, height }) => {
+  onclick: function () {
+    let xPercent = Math.random();
+    let yPercent = Math.random();
+    let color = colors[Math.floor(Math.random() * colors.length)];
+    let radius = Math.random() * 50;
+    gi.addDrawing(function ({ ctx, width, height }) {
       ctx.fillStyle = color;
-      const x = xperc * width;
-      const y = yperc * height;
+      let x = xPercent * width;
+      let y = yPercent * height;
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fill();

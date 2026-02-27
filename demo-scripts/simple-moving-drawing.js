@@ -7,9 +7,8 @@ import { GameCanvas } from "../src";
 
 const gameCanvas = new GameCanvas("demo-canvas");
 
-// Add a blue circle in the center
-gameCanvas.addDrawing(({ ctx, width, height, elapsed }) => {
-
+// Add a blue ball that moves side to side
+gameCanvas.addDrawing(function ({ ctx, width, height, elapsed }) {
   // We will use a sin function to move the ball back and forth
   // sin returns a value from -1 to 1
   let sinValue = Math.sin(elapsed / 1000);
@@ -23,9 +22,8 @@ gameCanvas.addDrawing(({ ctx, width, height, elapsed }) => {
   ctx.fill();
 });
 
-// We will use sin and cosin to add a red ball moving in a circle
-gameCanvas.addDrawing(({ ctx, width, height, elapsed }) => {
-
+// We will use sin and cosine to add a red ball moving in a circle
+gameCanvas.addDrawing(function ({ ctx, width, height, elapsed }) {
   // sin and cos return values from -1 to 1
   let sinValue = Math.sin(elapsed / 1000);
   let cosValue = Math.cos(elapsed / 1000);
@@ -40,6 +38,4 @@ gameCanvas.addDrawing(({ ctx, width, height, elapsed }) => {
   ctx.fill();
 });
 
-
 gameCanvas.run();
-
