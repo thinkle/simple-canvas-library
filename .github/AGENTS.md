@@ -130,6 +130,6 @@ type Size = { width: number; height: number };
 - **`demos/` is generated** — never edit files in `demos/` directly; edit `demo-scripts/` source files and rebuild.
 - **`docs/` is generated** — regenerate with `npm run docs` after API changes.
 - **`dist/` is generated** — rebuild with `npm run build`.
-- The `README.md` Quick Start example includes `ctx.clearRect()` which is actually unnecessary — it is kept for pedagogical clarity since beginners may read it outside the context of the library's auto-clear behavior. Keep this in mind when updating examples.
+- The `README.md` Quick Start example currently includes an unnecessary `ctx.clearRect()` call. Since the library auto-clears each frame, new or updated examples should omit manual clearing to teach the correct usage pattern.
 - Canvas keyboard events require the canvas to have focus (`tabIndex` is set automatically).
 - `addDrawing` returns an array index, not a unique ID. Removing and re-adding creates new indices; old indices are just marked as `off`.
