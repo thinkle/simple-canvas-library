@@ -21,8 +21,9 @@ game.addClickHandler(
     const id = game.addDrawing(
       function ({ ctx, elapsed, height }) {
         let ypos = y + elapsed / 5; // Fall down
+        // Wrap around when it goes off the bottom
         while (ypos > height) {
-          ypos -= height; // come around the top...
+          ypos -= height;
         }
         ctx.beginPath();
         ctx.fillStyle = color;
@@ -39,16 +40,18 @@ game.addClickHandler(
 
     drawings.push(id); // Keep track of our drawing so we can remove it.
 
-    // If we have too many drawings, remove the first one we put on...
+    // If we have too many drawings, remove the oldest one
     if (drawings.length > colors.length * 2) {
-      const toRemove = drawings.shift();
-      game.removeDrawing(toRemove);
+      let oldestId = drawings[0];
+      drawings.splice(0, 1); // remove first element from the array
+      game.removeDrawing(oldestId);
     }
 
-    // shift colors for next ball
+    // Move to the next color for next ball
     colorIndex += 1;
-    if (colorIndex >= colors.length) { colorIndex = 0; }
-    color = colors[colorIndex];
+    if (colorIndex >= colors.length) {
+      colorIndex = 0;
+    }
   } // end click callback
 );
 

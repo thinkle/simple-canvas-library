@@ -11,7 +11,7 @@ const demoContainer = document.getElementById('demo-container');
 const gi = new GameInterface({
   canvasSize: { width: 400, height: 300 },
   autoresize: true,
-  parent: demoContainer || document.body // Fallback to body if container doesn't exist
+  parent: demoContainer || document.body
 });
 
 // Game state variables
@@ -29,7 +29,7 @@ const topBar = gi.addTopBar();
 // About button to demonstrate dialog functionality
 topBar.addButton({
   text: "About",
-  onclick: () => {
+  onclick: function () {
     gi.dialog("About This Demo", "This demonstrates the GameInterface.dialog() popup functionality!");
   }
 });
@@ -41,7 +41,7 @@ const startButton = topBar.addButton({
     textColor: 'white',
     color: '#993a3a',
   },
-  onclick: () => {
+  onclick: function () {
     if (gi.getGameState() === 'stopped') {
       // Reset ball position when starting
       ballX = gi.getSize().width / 2;
@@ -59,7 +59,7 @@ const startButton = topBar.addButton({
 // Pause/Resume button
 const pauseButton = topBar.addButton({
   text: "Pause",
-  onclick: () => {
+  onclick: function () {
     if (gi.getGameState() === 'running') {
       gi.pause();
       pauseButton.setText("Resume");
@@ -75,7 +75,7 @@ const pauseButton = topBar.addButton({
 // Reset button
 topBar.addButton({
   text: "Reset",
-  onclick: () => {
+  onclick: function () {
     gi.reset();
     ballX = gi.getSize().width / 2;
     ballY = gi.getSize().height / 2;
@@ -100,11 +100,19 @@ const speedSlider = bottomBar.addSlider({
   max: 8,
   value: ballSpeed,
   step: 0.5,
-  oninput: (value) => {
+  oninput: function (value) {
     ballSpeed = value;
-    // Update velocity direction while preserving direction
-    ballVelX = ballVelX > 0 ? ballSpeed : -ballSpeed;
-    ballVelY = ballVelY > 0 ? ballSpeed : -ballSpeed;
+    // Update velocity while preserving direction
+    if (ballVelX > 0) {
+      ballVelX = ballSpeed;
+    } else {
+      ballVelX = -ballSpeed;
+    }
+    if (ballVelY > 0) {
+      ballVelY = ballSpeed;
+    } else {
+      ballVelY = -ballSpeed;
+    }
   }
 });
 
@@ -115,29 +123,29 @@ const sizeInput = bottomBar.addNumberInput({
   max: 50,
   value: ballSize,
   step: 5,
-  oninput: (value) => {
+  oninput: function (value) {
     ballSize = value;
   }
 });
 
 // Color controls using buttons
-const redButton = bottomBar.addButton({
+bottomBar.addButton({
   text: "Red",
-  onclick: () => {
+  onclick: function () {
     ballColor = '#ff6b6b';
   }
 });
 
-const blueButton = bottomBar.addButton({
+bottomBar.addButton({
   text: "Blue",
-  onclick: () => {
+  onclick: function () {
     ballColor = '#007cba';
   }
 });
 
-const greenButton = bottomBar.addButton({
+bottomBar.addButton({
   text: "Green",
-  onclick: () => {
+  onclick: function () {
     ballColor = '#4ecdc4';
   }
 });
@@ -158,21 +166,29 @@ const controlsToggle = bottomBar.addButton({
   }
 });
 
+// Helper function to draw the ball
+function drawBall(ctx) {
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, ballSize / 2, 0, Math.PI * 2);
+  ctx.fillStyle = ballColor;
+  ctx.fill();
+  // Pick a darker stroke color
+  let strokeColor = '#333';
+  if (ballColor === '#007cba') {
+    strokeColor = '#005a8a';
+  }
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
 // Game drawing logic - bouncing ball
-gi.addDrawing(({ ctx, width, height, stepTime }) => {
+gi.addDrawing(function ({ ctx, width, height, stepTime }) {
   // Only update if game is running
   if (gi.getGameState() !== 'running') {
     // Just redraw the ball in current position if paused
     ctx.clearRect(0, 0, width, height);
-
-    // Draw ball
-    ctx.beginPath();
-    ctx.arc(ballX, ballY, ballSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = ballColor;
-    ctx.fill();
-    ctx.strokeStyle = ballColor === '#007cba' ? '#005a8a' : '#333';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    drawBall(ctx);
 
     // Draw "PAUSED" text if paused
     if (gi.getGameState() === 'paused') {
@@ -194,26 +210,32 @@ gi.addDrawing(({ ctx, width, height, stepTime }) => {
   // Bounce off walls
   if (ballX <= ballSize / 2 || ballX >= width - ballSize / 2) {
     ballVelX = -ballVelX;
-    ballX = Math.max(ballSize / 2, Math.min(width - ballSize / 2, ballX));
+    // Keep ball inside bounds
+    if (ballX < ballSize / 2) {
+      ballX = ballSize / 2;
+    }
+    if (ballX > width - ballSize / 2) {
+      ballX = width - ballSize / 2;
+    }
   }
   if (ballY <= ballSize / 2 || ballY >= height - ballSize / 2) {
     ballVelY = -ballVelY;
-    ballY = Math.max(ballSize / 2, Math.min(height - ballSize / 2, ballY));
+    // Keep ball inside bounds
+    if (ballY < ballSize / 2) {
+      ballY = ballSize / 2;
+    }
+    if (ballY > height - ballSize / 2) {
+      ballY = height - ballSize / 2;
+    }
   }
 
   // Draw ball
-  ctx.beginPath();
-  ctx.arc(ballX, ballY, ballSize / 2, 0, Math.PI * 2);
-  ctx.fillStyle = ballColor;
-  ctx.fill();
-  ctx.strokeStyle = ballColor === '#007cba' ? '#005a8a' : '#333';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  drawBall(ctx);
 });
 
 // Add click handler to show coordinates
-gi.addClickHandler(({ x, y }) => {
-  gi.dialog("Click Detected!", `You clicked at position (${Math.round(x)}, ${Math.round(y)})`);
+gi.addClickHandler(function ({ x, y }) {
+  gi.dialog("Click Detected!", "You clicked at position (" + Math.round(x) + ", " + Math.round(y) + ")");
 });
 
 // Don't auto-start the game - wait for user to click Start

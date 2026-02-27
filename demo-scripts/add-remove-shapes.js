@@ -14,86 +14,101 @@ const gi = new GameInterface({
 });
 
 const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'];
-const shapes = ['circle', 'square', 'triangle'];
-const activeShapes = new Map();
+const shapeTypes = ['circle', 'square', 'triangle'];
 
-// Animated shape drawing functions
-const shapeDrawers = {
-  circle: ({ ctx, x, y, color, size, t }) => {
-    ctx.save();
-    ctx.translate(x, y);
-    // Pulse effect: size oscillates
-    const pulse = size * (0.85 + 0.15 * Math.sin(t * 2));
-    ctx.beginPath();
-    ctx.arc(0, 0, pulse, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
-  },
-  square: ({ ctx, x, y, color, size, t }) => {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(t);
-    ctx.fillStyle = color;
-    ctx.fillRect(-size, -size, size * 2, size * 2);
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(-size, -size, size * 2, size * 2);
-    ctx.restore();
-  },
-  triangle: ({ ctx, x, y, color, size, t }) => {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(t);
-    ctx.beginPath();
-    ctx.moveTo(0, -size);
-    ctx.lineTo(-size, size);
-    ctx.lineTo(size, size);
-    ctx.closePath();
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
-  }
-};
+// Keep track of all active shapes using simple arrays
+let shapeIds = [];      // drawing IDs from addDrawing
+let shapeDetails = [];  // info about each shape
 
-function addRandomShape() {
-  const color = colors[Math.floor(Math.random() * colors.length)];
-  const shape = shapes[Math.floor(Math.random() * shapes.length)];
-  const size = 20 + Math.random() * 20;
-  const x = 60 + Math.random() * 280;
-  const y = 60 + Math.random() * 180;
-  let t = 0;
-
-  // Animated drawing
-  const drawingId = gi.addDrawing(({ ctx, stepTime }) => {
-    t += stepTime / 400; // Animate rotation
-    shapeDrawers[shape]({ ctx, x, y, color, size, t });
-  });
-
-  activeShapes.set(drawingId, { x, y, color, shape, size, t });
-  return drawingId;
+// Functions to draw each shape type
+function drawCircle(ctx, x, y, size, t, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  // Pulse effect: size oscillates over time
+  let pulse = size * (0.85 + 0.15 * Math.sin(t * 2));
+  ctx.beginPath();
+  ctx.arc(0, 0, pulse, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
 }
 
-function removeRandomShape() {
-  const keys = Array.from(activeShapes.keys());
-  if (keys.length === 0) return;
-  const id = keys[Math.floor(Math.random() * keys.length)];
-  gi.removeDrawing(id);
-  activeShapes.delete(id);
+function drawSquare(ctx, x, y, size, t, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(t);
+  ctx.fillStyle = color;
+  ctx.fillRect(-size, -size, size * 2, size * 2);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-size, -size, size * 2, size * 2);
+  ctx.restore();
+}
+
+function drawTriangle(ctx, x, y, size, t, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(t);
+  ctx.beginPath();
+  ctx.moveTo(0, -size);
+  ctx.lineTo(-size, size);
+  ctx.lineTo(size, size);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function addRandomShape() {
+  let color = colors[Math.floor(Math.random() * colors.length)];
+  let shapeType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+  let size = 20 + Math.random() * 20;
+  let x = 60 + Math.random() * 280;
+  let y = 60 + Math.random() * 180;
+  let t = 0;
+
+  // Add an animated drawing for this shape
+  let drawingId = gi.addDrawing(function ({ ctx, stepTime }) {
+    t += stepTime / 400; // animate rotation over time
+    if (shapeType === 'circle') {
+      drawCircle(ctx, x, y, size, t, color);
+    } else if (shapeType === 'square') {
+      drawSquare(ctx, x, y, size, t, color);
+    } else {
+      drawTriangle(ctx, x, y, size, t, color);
+    }
+  });
+
+  shapeIds.push(drawingId);
+  shapeDetails.push({ x: x, y: y, color: color, shapeType: shapeType, size: size });
 }
 
 function removeLastShape() {
-  const keys = Array.from(activeShapes.keys());
-  if (keys.length === 0) return;
-  const id = keys[keys.length - 1];
+  if (shapeIds.length === 0) {
+    return;
+  }
+  let lastId = shapeIds[shapeIds.length - 1];
+  gi.removeDrawing(lastId);
+  shapeIds.pop();
+  shapeDetails.pop();
+}
+
+function removeRandomShape() {
+  if (shapeIds.length === 0) {
+    return;
+  }
+  let index = Math.floor(Math.random() * shapeIds.length);
+  let id = shapeIds[index];
   gi.removeDrawing(id);
-  activeShapes.delete(id);
+  // Remove from both arrays at the same index
+  shapeIds.splice(index, 1);
+  shapeDetails.splice(index, 1);
 }
 
 // UI Controls
@@ -114,11 +129,11 @@ topBar.addButton({
   onclick: removeRandomShape
 });
 
-gi.addDrawing(({ ctx, width, height }) => {
+gi.addDrawing(function ({ ctx, width, height }) {
   ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
   ctx.font = '14px sans-serif';
   ctx.fillText('Use the buttons to add/remove animated shapes.', 10, 25);
-  ctx.fillText(`Active shapes: ${activeShapes.size}`, 10, height - 15);
+  ctx.fillText('Active shapes: ' + shapeIds.length, 10, height - 15);
 });
 
 gi.run();

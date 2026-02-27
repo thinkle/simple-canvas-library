@@ -68,19 +68,15 @@ const cat = new Sprite({
 
       // Set animation based on movement state
       sprite.animate = true;
-      switch (animationState) {
-        case 'walk':
-          sprite.frameSequence = [7, 8, 9, 10, 11, 12, 13]; // Row 1: Walking
-          sprite.frameRate = 6; // Slower animation
-          break;
-        case 'run':
-          sprite.frameSequence = [14, 15, 16, 17, 18, 19, 20]; // Row 2: Running
-          sprite.frameRate = 10; // Medium speed
-          break;
-        case 'sprint':
-          sprite.frameSequence = [21, 22, 23, 24, 25, 26, 27]; // Row 3: Fast running
-          sprite.frameRate = 14; // Fast animation
-          break;
+      if (animationState === 'walk') {
+        sprite.frameSequence = [7, 8, 9, 10, 11, 12, 13]; // Row 1: Walking
+        sprite.frameRate = 6; // Slower animation
+      } else if (animationState === 'run') {
+        sprite.frameSequence = [14, 15, 16, 17, 18, 19, 20]; // Row 2: Running
+        sprite.frameRate = 10; // Medium speed
+      } else if (animationState === 'sprint') {
+        sprite.frameSequence = [21, 22, 23, 24, 25, 26, 27]; // Row 3: Fast running
+        sprite.frameRate = 14; // Fast animation
       }
     } else {
       // Cat is close to mouse - idle state

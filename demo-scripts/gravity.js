@@ -24,7 +24,6 @@ function moveBall(seconds) {
 
 // A simple function to handle bouncing off walls
 function bounceBall(width, height) {
-  // Handle bouncing
   if (xPosition > width - 20) {
     xPosition = width - 20;
     xVelocity = -Math.abs(xVelocity * 0.8); // bounce left with some energy loss
@@ -49,7 +48,7 @@ const gameInterface = new GameInterface({
 });
 
 gameInterface.addDrawing(
-  ({ ctx, width, height, stepTime }) => {
+  function ({ ctx, width, height, stepTime }) {
     // Update ball position first
     moveBall(stepTime / 1000);
     bounceBall(width, height);
@@ -62,41 +61,37 @@ gameInterface.addDrawing(
   }
 );
 
-// Build a simple UI for changing initial x/y velocity
-// or "kicking" the ball
-
-
-gameInterface.addResizeHandler((params) => {
+// Update width and height when the canvas is resized
+gameInterface.addResizeHandler(function (params) {
   width = params.width;
   height = params.height;
-})
+});
 
 // Bottom bar to "kick" the ball in various directions
 const bottom = gameInterface.addBottomBar();
 bottom.addButton({
   text: 'Left',
-  onclick: () => {
+  onclick: function () {
     xVelocity -= 150;
   }
 });
 bottom.addButton({
   text: 'Right',
-  onclick: () => {
+  onclick: function () {
     xVelocity += 150;
   }
 });
 bottom.addButton({
   text: 'Up',
-  onclick: () => {
+  onclick: function () {
     yVelocity -= 150;
   }
 });
 bottom.addButton({
   text: 'Down',
-  onclick: () => {
+  onclick: function () {
     yVelocity += 150;
   }
 });
-
 
 gameInterface.run();

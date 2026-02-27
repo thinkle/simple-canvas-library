@@ -8,12 +8,13 @@ import { GameCanvas } from "../src";
 
 const gameCanvas = new GameCanvas("demo-canvas");
 
-const coolColors = ['salmon', 'coral', 'navy', 'orange', 'teal', 'red', ' green', 'blue', 'indigo', 'violet', 'pink', 'purple']
+const coolColors = ['salmon', 'coral', 'navy', 'orange', 'teal', 'red', 'green', 'blue', 'indigo', 'violet', 'pink', 'purple'];
 
-gameCanvas.addClickHandler((event) => {
-  const { x, y } = event;
-  const color = coolColors[Math.floor(Math.random() * coolColors.length)];
-  gameCanvas.addDrawing(({ ctx }) => {
+gameCanvas.addClickHandler(function (event) {
+  let x = event.x;
+  let y = event.y;
+  let color = coolColors[Math.floor(Math.random() * coolColors.length)];
+  gameCanvas.addDrawing(function ({ ctx }) {
     ctx.fillStyle = color;
     ctx.fillRect(x - 25, y - 25, 50, 50);
   });

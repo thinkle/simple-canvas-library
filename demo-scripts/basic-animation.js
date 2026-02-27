@@ -8,7 +8,7 @@ import { GameCanvas } from "../src/index.ts";
 
 const game = new GameCanvas("demo-canvas");
 
-game.addDrawing(({ ctx, elapsed, width, height }) => {
+game.addDrawing(function ({ ctx, elapsed, width, height }) {
   // Let's build a spinner using elapsed...
   // We will move one rotation per second... so...
   let angle = (elapsed / 1000) * 2 * Math.PI;
