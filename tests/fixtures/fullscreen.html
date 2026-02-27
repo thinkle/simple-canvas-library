@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fullscreen Canvas</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      #test-canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="test-canvas"></canvas>
+    <script type="module">
+      import { GameCanvas } from "/src/index.ts";
+
+      const game = new GameCanvas("test-canvas", { autoresize: true });
+
+      game.addDrawing(({ ctx, width, height }) => {
+        // Gradient background
+        const grad = ctx.createLinearGradient(0, 0, width, height);
+        grad.addColorStop(0, "#1a1a2e");
+        grad.addColorStop(1, "#16213e");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Draw corner markers
+        const markerSize = Math.min(width, height) * 0.05;
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(0, 0, markerSize, markerSize);                          // top-left
+        ctx.fillRect(width - markerSize, 0, markerSize, markerSize);         // top-right
+        ctx.fillRect(0, height - markerSize, markerSize, markerSize);        // bottom-left
+        ctx.fillRect(width - markerSize, height - markerSize, markerSize, markerSize); // bottom-right
+
+        // Center circle
+        ctx.beginPath();
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 3;
+        ctx.arc(width / 2, height / 2, Math.min(width, height) * 0.2, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Size indicator
+        ctx.fillStyle = "white";
+        ctx.font = "20px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(`${width} × ${height}`, width / 2, height / 2);
+        ctx.textAlign = "left";
+      });
+
+      game.run();
+
+      window.__game = game;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Responsive Canvas (Autoresize)</title>
+    <style>
+      body { margin: 0; background: #f0f0f0; }
+      /* Canvas sized via CSS, will autoresize */
+      #test-canvas {
+        display: block;
+        width: 600px;
+        height: 350px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="test-canvas"></canvas>
+    <script type="module">
+      import { GameCanvas } from "/src/index.ts";
+
+      const game = new GameCanvas("test-canvas", { autoresize: true });
+
+      game.addDrawing(({ ctx, width, height }) => {
+        // Fill background purple
+        ctx.fillStyle = "purple";
+        ctx.fillRect(0, 0, width, height);
+        // Draw diagonal stripes
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = 10;
+        for (let i = -height; i < width + height; i += 50) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i + height, height);
+          ctx.stroke();
+        }
+        // Draw size indicator text
+        ctx.fillStyle = "white";
+        ctx.font = "20px sans-serif";
+        ctx.fillText(`${width} × ${height}`, 10, 30);
+      });
+
+      game.run();
+
+      window.__game = game;
+    </script>
+  </body>
+</html>

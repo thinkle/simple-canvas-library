@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>HTML Attribute Sized Canvas</title>
+    <style>
+      body { margin: 0; background: #f0f0f0; }
+    </style>
+  </head>
+  <body>
+    <!-- Canvas sized via HTML attributes -->
+    <canvas id="test-canvas" width="500" height="250"></canvas>
+    <script type="module">
+      import { GameCanvas } from "/src/index.ts";
+
+      const game = new GameCanvas("test-canvas");
+
+      game.addDrawing(({ ctx, width, height }) => {
+        // Fill background orange
+        ctx.fillStyle = "orange";
+        ctx.fillRect(0, 0, width, height);
+        // Draw a white cross
+        ctx.fillStyle = "white";
+        ctx.fillRect(width / 2 - 10, 0, 20, height);
+        ctx.fillRect(0, height / 2 - 10, width, 20);
+        // Draw size indicator text
+        ctx.fillStyle = "black";
+        ctx.font = "20px sans-serif";
+        ctx.fillText(`${width} × ${height}`, 10, 30);
+      });
+
+      game.run();
+
+      window.__game = game;
+    </script>
+  </body>
+</html>

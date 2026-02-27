@@ -12,7 +12,10 @@
     "build:demos": "node build-demos.js",
     "docs": "typedoc --out docs src",
     "demo:list": "node demo-manager.js list",
-    "demo:manage": "node demo-manager.js"
+    "demo:manage": "node demo-manager.js",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug"
   },
   "repository": {
     "type": "git",
