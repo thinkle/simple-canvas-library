@@ -21,14 +21,14 @@ let shapeIds = [];      // drawing IDs from addDrawing
 let shapeDetails = [];  // info about each shape
 
 // Functions to draw each shape type
-function drawCircle(ctx, x, y, size, t) {
+function drawCircle(ctx, x, y, size, t, color) {
   ctx.save();
   ctx.translate(x, y);
   // Pulse effect: size oscillates over time
   let pulse = size * (0.85 + 0.15 * Math.sin(t * 2));
   ctx.beginPath();
   ctx.arc(0, 0, pulse, 0, Math.PI * 2);
-  ctx.fillStyle = ctx._shapeColor; // we'll set this before calling
+  ctx.fillStyle = color;
   ctx.fill();
   ctx.strokeStyle = '#333';
   ctx.lineWidth = 2;
@@ -36,11 +36,11 @@ function drawCircle(ctx, x, y, size, t) {
   ctx.restore();
 }
 
-function drawSquare(ctx, x, y, size, t) {
+function drawSquare(ctx, x, y, size, t, color) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(t);
-  ctx.fillStyle = ctx._shapeColor;
+  ctx.fillStyle = color;
   ctx.fillRect(-size, -size, size * 2, size * 2);
   ctx.strokeStyle = '#333';
   ctx.lineWidth = 2;
@@ -48,7 +48,7 @@ function drawSquare(ctx, x, y, size, t) {
   ctx.restore();
 }
 
-function drawTriangle(ctx, x, y, size, t) {
+function drawTriangle(ctx, x, y, size, t, color) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(t);
@@ -57,7 +57,7 @@ function drawTriangle(ctx, x, y, size, t) {
   ctx.lineTo(-size, size);
   ctx.lineTo(size, size);
   ctx.closePath();
-  ctx.fillStyle = ctx._shapeColor;
+  ctx.fillStyle = color;
   ctx.fill();
   ctx.strokeStyle = '#333';
   ctx.lineWidth = 2;
@@ -76,14 +76,12 @@ function addRandomShape() {
   // Add an animated drawing for this shape
   let drawingId = gi.addDrawing(function ({ ctx, stepTime }) {
     t += stepTime / 400; // animate rotation over time
-    // Store the color so our draw functions can access it
-    ctx._shapeColor = color;
     if (shapeType === 'circle') {
-      drawCircle(ctx, x, y, size, t);
+      drawCircle(ctx, x, y, size, t, color);
     } else if (shapeType === 'square') {
-      drawSquare(ctx, x, y, size, t);
+      drawSquare(ctx, x, y, size, t, color);
     } else {
-      drawTriangle(ctx, x, y, size, t);
+      drawTriangle(ctx, x, y, size, t, color);
     }
   });
 
